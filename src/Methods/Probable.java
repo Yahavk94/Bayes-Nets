@@ -6,5 +6,5 @@ package Methods;
  */
 
 public interface Probable {
-	public double inference(String query);
+	public String inference(String query);
 }

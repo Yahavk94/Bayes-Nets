@@ -7,7 +7,7 @@ package Methods;
 
 public class _03_Heuristic implements Probable {
 	@Override
-	public double inference(String query) {
-		return 0;
+	public String inference(String query) {
+		return null;
 	}
 }

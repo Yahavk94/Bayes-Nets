@@ -2,7 +2,6 @@ package Execute;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import Methods._01_Simple;
@@ -22,9 +21,8 @@ public class Execute {
 		Queue<String> queries = new LinkedList<>();
 		Queue<Integer> methods = new LinkedList<>();
 
-		Iterator<String> iterator = Input.getQList().iterator();
-		while (iterator.hasNext()) {
-			String query = iterator.next();
+		while (!Input.queries.isEmpty()) {
+			String query = Input.queries.remove(0);
 			int index = query.lastIndexOf(",");
 			queries.add(query.substring(0, index));
 			methods.add(Integer.parseInt(query.substring(index + 1)));

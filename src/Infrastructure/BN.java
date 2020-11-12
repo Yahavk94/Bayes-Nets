@@ -1,5 +1,6 @@
 package Infrastructure;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -8,13 +9,13 @@ import java.util.Map;
  */
 
 public class BN {
-	private Map<String, Node> network = new HashMap<>();
+	private Map<String, Node> network;
 	private static BN instance = new BN();
 
 	/**
 	 * This method returns a single instance of the network.
 	 */
-	public static BN getBN() {
+	public static BN getInstance() {
 		return instance;
 	}
 
@@ -22,7 +23,7 @@ public class BN {
 	 * This method constructs a new network.
 	 */
 	private BN() {
-		network = Init.initFromFile(network);
+		network = Init.initFromFile(new HashMap<>());
 	}
 
 	/**
@@ -30,5 +31,12 @@ public class BN {
 	 */
 	public Node getNode(String name) {
 		return network.get(name);
+	}
+
+	/**
+	 * This method returns an iteration of the nodes in the network.
+	 */
+	public Iterator<Node> iteration() {
+		return network.values().iterator();
 	}
 }

@@ -9,13 +9,13 @@ import java.util.Map;
  * @author Yahav Karpel
  */
 
-public class Node {
+public class Node implements Comparable<Node> {
 	private String name;
 
-	private Map<String, Double> cpt = new LinkedHashMap<>();
-	private Map<String, Boolean> values = new LinkedHashMap<>();
-
+	private List<String> values = new ArrayList<>(); // HashMap<String, Boolean>
 	private List<String> parents = new ArrayList<>();
+
+	private Map<String, Double> cpt = new LinkedHashMap<>();
 
 	/**
 	 * This method constructs a new node.
@@ -41,7 +41,7 @@ public class Node {
 	/**
 	 * This method returns the values of this node.
 	 */
-	public Map<String, Boolean> getValues() {
+	public List<String> getValues() {
 		return values;
 	}
 
@@ -50,5 +50,17 @@ public class Node {
 	 */
 	public List<String> getParents() {
 		return parents;
+	}
+
+	/**
+	 * For sorting purpose.
+	 */
+	@Override
+	public int compareTo(Node node) {
+		if (values.size() > node.values.size()) {
+			return 1;
+		}
+
+		return -1;
 	}
 }

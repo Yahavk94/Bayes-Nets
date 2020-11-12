@@ -7,7 +7,7 @@ package Methods;
 
 public class _02_VE implements Probable {
 	@Override
-	public double inference(String query) {
-		return 0;
+	public String inference(String query) {
+		return null;
 	}
 }

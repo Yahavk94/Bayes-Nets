@@ -10,53 +10,71 @@ import Utils.Input;
 
 public class Init {
 	protected static Map<String, Node> initFromFile(Map<String, Node> network) {
-		StringTokenizer tokenizer = new StringTokenizer(Input.getNList().remove(0).split(":")[1], " ,");
-		int size = tokenizer.countTokens();
+		String input = Input.nodes.remove(0);
+		StringTokenizer tokenizer = new StringTokenizer(input.substring(input.indexOf(" ") + 1), " ,");
+		while (tokenizer.hasMoreTokens()) /* Initialize the nodes in the network */ {
+			Node node = new Node(tokenizer.nextToken());
+			network.put(node.getName(), node);
+		}
 
-		for (int i = 0; i < size; i += 1) {
-			Node node = new Node(Input.getNList().remove(0).split(" ")[1]);
+		// Epsilon
+		Input.nodes.remove(0);
 
-			tokenizer = new StringTokenizer(Input.getNList().remove(0).split(":")[1], " ,");
+		while (!Input.nodes.isEmpty()) {
+			input = Input.nodes.remove(0);
+			Node current = network.get(input.substring(input.indexOf(" ") + 1));
+
+			// Initialize the values of the current node
+			input = Input.nodes.remove(0);
+			tokenizer = new StringTokenizer(input.substring(input.indexOf(" ") + 1), " ,");
 			while (tokenizer.hasMoreTokens()) {
-				node.getValues().put(tokenizer.nextToken(), false);
+				current.getValues().add(tokenizer.nextToken());
+				//current.getValues().put(tokenizer.nextToken(), false);
 			}
 
-			tokenizer = new StringTokenizer(Input.getNList().remove(0).split(":")[1], " ,");
+			// Initialize the parents of the current node
+			input = Input.nodes.remove(0);
+			tokenizer = new StringTokenizer(input.substring(input.indexOf(" ") + 1), " ,");
 			while (tokenizer.hasMoreTokens()) {
 				String token = tokenizer.nextToken();
 				if (!token.equals("none")) {
-					node.getParents().add(token);
+					current.getParents().add(token);
 				}
 			}
 
-			if (node.getParents().size() == 0) {
-				tokenizer = new StringTokenizer(Input.getNList().remove(0), ",");
+			if (current.getParents().size() == 0) {
+				tokenizer = new StringTokenizer(Input.nodes.remove(0), ",");
 				while (tokenizer.hasMoreTokens()) {
 					String value = tokenizer.nextToken();
-					node.getValues().replace(value.substring(1), true);
-					node.getCpt().put("P(" + node.getName() + value + ")", Double.parseDouble(tokenizer.nextToken()));
+					//current.getValues().replace(value.substring(1), true);
+					current.getCpt().put("P(" + current.getName() + value + ")", Double.parseDouble(tokenizer.nextToken()));
 				}
+
+				// Epsilon
+				Input.nodes.remove(0);
+				continue;
 			}
 
-			for (int lines = 0; lines < node.getParents().size() * node.getValues().size(); lines += 1) {
+			// Initialize the conditional probabilities of the current node
+			tokenizer = new StringTokenizer(Input.nodes.remove(0), ",");
+			while (tokenizer.hasMoreTokens()) {
 				String cp = "|";
 
-				int d = 0;
-				tokenizer = new StringTokenizer(Input.getNList().remove(0), ",");
-				while (d < node.getParents().size() - 1) {
-					cp += node.getParents().get(d++) + "=" + tokenizer.nextToken() + ",";
+				int i = 0;
+				while (i < current.getParents().size() - 1) {
+					cp += current.getParents().get(i++) + "=" + tokenizer.nextToken() + ",";
 				}
 
-				cp += node.getParents().get(d) + "=" + tokenizer.nextToken() + ")";
+				cp += current.getParents().get(i) + "=" + tokenizer.nextToken() + ")";
 
 				while (tokenizer.hasMoreTokens()) {
 					String value = tokenizer.nextToken();
-					node.getValues().replace(value.substring(1), true);
-					node.getCpt().put("P(" + node.getName() + value + cp, Double.parseDouble(tokenizer.nextToken()));
+					//current.getValues().replace(value.substring(1), true);
+					current.getCpt().put("P(" + current.getName() + value + cp, Double.parseDouble(tokenizer.nextToken()));
 				}
-			}
 
-			network.put(node.getName(), node);
+				tokenizer = new StringTokenizer(Input.nodes.remove(0), ",");
+			}
 		}
 
 		return network;
