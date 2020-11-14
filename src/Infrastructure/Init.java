@@ -1,5 +1,7 @@
 package Infrastructure;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 import Utils.Input;
 
@@ -11,9 +13,11 @@ import Utils.Input;
 public class Init {
 	protected static Map<String, Node> initFromFile(Map<String, Node> network) {
 		String input = Input.nodes.remove(0);
-		StringTokenizer tokenizer = new StringTokenizer(input.substring(input.indexOf(" ") + 1), " ,");
-		while (tokenizer.hasMoreTokens()) /* Initialize the nodes in the network */ {
-			Node node = new Node(tokenizer.nextToken());
+
+		// Initialize the nodes in the network
+		StringTokenizer st = new StringTokenizer(input.substring(input.indexOf(" ") + 1), " ,");
+		while (st.hasMoreTokens()) {
+			Node node = new Node(st.nextToken());
 			network.put(node.getName(), node);
 		}
 
@@ -26,28 +30,25 @@ public class Init {
 
 			// Initialize the values of the current node
 			input = Input.nodes.remove(0);
-			tokenizer = new StringTokenizer(input.substring(input.indexOf(" ") + 1), " ,");
-			while (tokenizer.hasMoreTokens()) {
-				current.getValues().add(tokenizer.nextToken());
-				//current.getValues().put(tokenizer.nextToken(), false);
+			st = new StringTokenizer(input.substring(input.indexOf(" ") + 1), " ,");
+			while (st.hasMoreTokens()) {
+				current.getValues().add(st.nextToken());
 			}
 
 			// Initialize the parents of the current node
 			input = Input.nodes.remove(0);
-			tokenizer = new StringTokenizer(input.substring(input.indexOf(" ") + 1), " ,");
-			while (tokenizer.hasMoreTokens()) {
-				String token = tokenizer.nextToken();
+			st = new StringTokenizer(input.substring(input.indexOf(" ") + 1), " ,");
+			while (st.hasMoreTokens()) {
+				String token = st.nextToken();
 				if (!token.equals("none")) {
 					current.getParents().add(token);
 				}
 			}
 
 			if (current.getParents().size() == 0) {
-				tokenizer = new StringTokenizer(Input.nodes.remove(0), ",");
-				while (tokenizer.hasMoreTokens()) {
-					String value = tokenizer.nextToken();
-					//current.getValues().replace(value.substring(1), true);
-					current.getCpt().put("P(" + current.getName() + value + ")", Double.parseDouble(tokenizer.nextToken()));
+				st = new StringTokenizer(Input.nodes.remove(0), ",");
+				while (st.hasMoreTokens()) {
+					current.getCpt().put(current.getName() + st.nextToken(), Double.parseDouble(st.nextToken()));
 				}
 
 				// Epsilon
@@ -56,24 +57,19 @@ public class Init {
 			}
 
 			// Initialize the conditional probabilities of the current node
-			tokenizer = new StringTokenizer(Input.nodes.remove(0), ",");
-			while (tokenizer.hasMoreTokens()) {
-				String cp = "|";
+			st = new StringTokenizer(Input.nodes.remove(0), " ,");
+			while (st.hasMoreTokens()) {
+				Set<String> set = new HashSet<>();
 
-				int i = 0;
-				while (i < current.getParents().size() - 1) {
-					cp += current.getParents().get(i++) + "=" + tokenizer.nextToken() + ",";
+				for (int i = 0; i < current.getParents().size(); i += 1) {
+					set.add(current.getParents().get(i) + "=" + st.nextToken());
 				}
 
-				cp += current.getParents().get(i) + "=" + tokenizer.nextToken() + ")";
-
-				while (tokenizer.hasMoreTokens()) {
-					String value = tokenizer.nextToken();
-					//current.getValues().replace(value.substring(1), true);
-					current.getCpt().put("P(" + current.getName() + value + cp, Double.parseDouble(tokenizer.nextToken()));
+				while (st.hasMoreTokens()) {
+					current.getCpt().put(current.getName() + st.nextToken() + "|" + set, Double.parseDouble(st.nextToken()));
 				}
 
-				tokenizer = new StringTokenizer(Input.nodes.remove(0), ",");
+				st = new StringTokenizer(Input.nodes.remove(0), " ,");
 			}
 		}
 

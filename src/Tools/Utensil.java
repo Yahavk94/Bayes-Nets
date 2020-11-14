@@ -17,49 +17,77 @@ public class Utensil {
 	/**
 	 * This method breaks up the given query calculations into distinct parts.
 	 */
-	protected static List<Map<String, String>> totalProbabilityRule(String query) {
+	protected static List<Map<String, String>> completeProbabilityFormula(String query) {
 		List<Map<String, String>> tpr = new ArrayList<>();
-		Map<String, String> map = tokenize(query);
-		List<Node> nodes = missingNodes(map);
+
+		Map<String, String> map = getQueryNodes(query);
+		List<Node> nodes = getNonQueryNodes(map);
 
 		List<List<String>> cartesian = Utensil.cartesianProduct(nodes);
 		while (!cartesian.isEmpty()) {
-			Map<String, String> m = Utensil.clone(map);
-			List<String> element = cartesian.remove(0);
+			Map<String, String> clone = Utensil.clone(map);
 
 			Iterator<Node> iterator = nodes.iterator();
 			while (iterator.hasNext()) {
-				m.put(iterator.next().getName(), element.remove(0));
+				clone.put(iterator.next().getName(), cartesian.get(0).remove(0));
 			}
 
-			tpr.add(m);
+			cartesian.remove(0);
+			tpr.add(clone);
 		}
 
 		return tpr;
 	}
 
-	private static Map<String, String> tokenize(String query) {
-		Map<String, String> qe = new LinkedHashMap<>();
-		StringTokenizer tokenizer = new StringTokenizer(query.substring(1), "|(,)=");
-		while (tokenizer.hasMoreTokens()) {
-			qe.put(tokenizer.nextToken(), tokenizer.nextToken());
+	/**
+	 * This method returns the complementary events of the given query.
+	 */
+	protected static List<String> getComplementaryEvents(String query) {
+		List<String> ce = new ArrayList<>();
+
+		StringTokenizer st = new StringTokenizer(query, "|");
+		st = new StringTokenizer(st.nextToken(), "=");
+		Node node = BN.getInstance().getNode(st.nextToken());
+		String value = st.nextToken();
+
+		for (int i = 0; i < node.getValues().size(); i += 1) {
+			if (!node.getValues().get(i).equals(value)) {
+				ce.add(query.replaceFirst(value, node.getValues().get(i)));
+			}
 		}
 
-		return qe;
+		return ce;
 	}
 
-	private static List<Node> missingNodes(Map<String, String> map) {
-		List<Node> nodes = new ArrayList<>();
+	/**
+	 * This method returns the nodes that are in the given query.
+	 */
+	private static Map<String, String> getQueryNodes(String query) {
+		Map<String, String> qn = new LinkedHashMap<>();
+
+		StringTokenizer st = new StringTokenizer(query, "|(=),");
+		while (st.hasMoreTokens()) {
+			qn.put(st.nextToken(), st.nextToken());
+		}
+
+		return qn;
+	}
+
+	/**
+	 * This method returns the nodes that are not in the given query.
+	 */
+	private static List<Node> getNonQueryNodes(Map<String, String> map) {
+		List<Node> nqn = new ArrayList<>();
 
 		Iterator<Node> iterator = BN.getInstance().iteration();
 		while (iterator.hasNext()) {
 			Node node = iterator.next();
 			if (!map.containsKey(node.getName())) {
-				nodes.add(node);
+				nqn.add(node);
 			}
 		}
 
-		return nodes;
+		return nqn;
 	}
 
 	/**
@@ -91,12 +119,13 @@ public class Utensil {
 			List<List<String>> temp = new ArrayList<>();
 
 			while (!cartesian.isEmpty()) {
-				List<String> element = cartesian.remove(0);
 				for (int v = 0; v < nodes.get(i).getValues().size(); v += 1) {
-					List<String> lst = clone(element);
+					List<String> lst = clone(cartesian.get(0));
 					lst.add(nodes.get(i).getValues().get(v));
 					temp.add(lst);
 				}
+
+				cartesian.remove(0);
 			}
 
 			cartesian = temp;
@@ -110,8 +139,10 @@ public class Utensil {
 	 */
 	private static List<String> clone(List<String> list) {
 		List<String> cloneList = new ArrayList<>();
-		for (int i = 0; i < list.size(); i += 1) {
-			cloneList.add(list.get(i));
+
+		Iterator<String> iterator = list.iterator();
+		while (iterator.hasNext()) {
+			cloneList.add(iterator.next());
 		}
 
 		return cloneList;

@@ -1,9 +1,12 @@
 package Tools;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import Infrastructure.BN;
+import Infrastructure.Node;
 
 /**
  * This class represents the methods which are used by the algorithms.
@@ -12,39 +15,64 @@ import Infrastructure.BN;
 
 public class Service {
 	/**
-	 * This method converts and returns the given query as a BN formula.
+	 * This method returns the given query as a BN formula.
 	 */
 	public static List<List<String>> getBNFormula(String query) {
 		List<List<String>> formula = new ArrayList<>();
 
-		List<Map<String, String>> tpr = Utensil.totalProbabilityRule(query);
+		List<Map<String, String>> tpr = Utensil.completeProbabilityFormula(query);
 		while (!tpr.isEmpty()) {
-			Map<String, String> map = tpr.remove(0);
 			List<String> list = new ArrayList<>();
-
+			Map<String, String> map = tpr.remove(0);
 			Iterator<String> iterator = map.keySet().iterator();
 			while (iterator.hasNext()) {
-				String X = iterator.next();
-				if (BN.getInstance().getNode(X).getParents().size() == 0) {
-					list.add("P(" + X + "=" + map.get(X) + ")");
+				Node node = BN.getInstance().getNode(iterator.next());
+
+				if (node.getParents().size() == 0) {
+					list.add(node.getName() + "=" + map.get(node.getName()));
 					continue;
 				}
 
-				String cp = "P(" + X + "=" + map.get(X) + "|";
-
-				int i = 0;
-				while (i < BN.getInstance().getNode(X).getParents().size() - 1) {
-					String parent = BN.getInstance().getNode(X).getParents().get(i++);
-					cp += parent + "=" + map.get(parent) + ",";
+				Set<String> set = new HashSet<>();
+				for (int i = 0; i < node.getParents().size(); i += 1) {
+					set.add(node.getParents().get(i) + "=" + map.get(node.getParents().get(i)));
 				}
 
-				String parent = BN.getInstance().getNode(X).getParents().get(i);
-				list.add(cp + parent + "=" + map.get(parent) + ")");
+				list.add(node.getName() + "=" + map.get(node.getName()) + "|" + set);
 			}
 
 			formula.add(list);
 		}
 
 		return formula;
+	}
+
+	/**
+	 * This method returns the sample set of the given query.
+	 */
+	public static List<String> getSampleSet(String query) {
+		List<String> sample = new ArrayList<>();
+		sample.add(query);
+		sample.addAll(Utensil.getComplementaryEvents(query));
+		return sample;
+	}
+
+	/**
+	 * This method calculates the probability of the given query.
+	 */
+	public static double calculateProbability(String query) {
+		Node node = BN.getInstance().getNode(query.substring(0, query.indexOf("=")));
+		if (node.getCpt().containsKey(query)) {
+			return node.getCpt().get(query);
+		}
+
+		double probability = 1;
+		List<String> ce = Utensil.getComplementaryEvents(query);
+
+		while (!ce.isEmpty()) {
+			probability = probability * (1 - node.getCpt().get(ce.remove(0)));
+		}
+
+		return probability;
 	}
 }

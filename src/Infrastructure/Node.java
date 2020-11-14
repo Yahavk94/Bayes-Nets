@@ -12,7 +12,7 @@ import java.util.Map;
 public class Node implements Comparable<Node> {
 	private String name;
 
-	private List<String> values = new ArrayList<>(); // HashMap<String, Boolean>
+	private List<String> values = new ArrayList<>();
 	private List<String> parents = new ArrayList<>();
 
 	private Map<String, Double> cpt = new LinkedHashMap<>();
