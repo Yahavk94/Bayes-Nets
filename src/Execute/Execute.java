@@ -24,7 +24,7 @@ public class Execute {
 		while (!Input.queries.isEmpty()) {
 			String query = Input.queries.remove(0);
 			int index = query.lastIndexOf(",");
-			queries.add(query.substring(2, index - 1));
+			queries.add(query.substring(0, index));
 			methods.add(Integer.parseInt(query.substring(index + 1)));
 		}
 

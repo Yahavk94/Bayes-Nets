@@ -1,5 +1,6 @@
 package Infrastructure;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -45,7 +46,7 @@ public class Init {
 				}
 			}
 
-			if (current.getParents().size() == 0) {
+			if (!current.parentsIterator().hasNext()) {
 				st = new StringTokenizer(Input.nodes.remove(0), ",");
 				while (st.hasMoreTokens()) {
 					current.getCpt().put(current.getName() + st.nextToken(), Double.parseDouble(st.nextToken()));
@@ -61,8 +62,9 @@ public class Init {
 			while (st.hasMoreTokens()) {
 				Set<String> set = new HashSet<>();
 
-				for (int i = 0; i < current.getParents().size(); i += 1) {
-					set.add(current.getParents().get(i) + "=" + st.nextToken());
+				Iterator<String> iterator = current.parentsIterator();
+				while (iterator.hasNext()) {
+					set.add(iterator.next() + "=" + st.nextToken());
 				}
 
 				while (st.hasMoreTokens()) {

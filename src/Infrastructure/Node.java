@@ -1,5 +1,6 @@
 package Infrastructure;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,20 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
+	 * This method returns true if the cpt of this node contains the probability of the given query.
+	 */
+	public boolean containsProbability(String query) {
+		return cpt.containsKey(query);
+	}
+
+	/**
+	 * This method returns the probability of the given query.
+	 */
+	public double getProbability(String query) {
+		return cpt.get(query);
+	}
+
+	/**
 	 * This method returns the values of this node.
 	 */
 	public List<String> getValues() {
@@ -46,10 +61,24 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
+	 * This method returns an iteration of the values of this node.
+	 */
+	public Iterator<String> valuesIterator() {
+		return values.iterator();
+	}
+
+	/**
 	 * This method returns the parents of this node.
 	 */
 	public List<String> getParents() {
 		return parents;
+	}
+
+	/**
+	 * This method returns an iteration of the parents of this node.
+	 */
+	public Iterator<String> parentsIterator() {
+		return parents.iterator();
 	}
 
 	/**

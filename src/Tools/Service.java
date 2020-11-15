@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import Infrastructure.BN;
 import Infrastructure.Node;
 
@@ -15,27 +16,45 @@ import Infrastructure.Node;
 
 public class Service {
 	/**
+	 * This method returns the sample set associated with the given query.
+	 */
+	public static Stack<String> getSamples(String query) {
+		Stack<String> sample = Utensil.getComplementaryEvents(query);
+		sample.push(query);
+		return sample;
+	}
+
+	/**
 	 * This method returns the given query as a BN formula.
 	 */
 	public static List<List<String>> getBNFormula(String query) {
+		Stack<Map<String, String>> cpf = Utensil.completeProbabilityFormula(query);
+		if (cpf == null) /* The formula cannot be created */ {
+			return null;
+		}
+
+		// The distinct parts of the formula
 		List<List<String>> formula = new ArrayList<>();
 
-		List<Map<String, String>> tpr = Utensil.completeProbabilityFormula(query);
-		while (!tpr.isEmpty()) {
+		while (!cpf.isEmpty()) {
 			List<String> list = new ArrayList<>();
-			Map<String, String> map = tpr.remove(0);
-			Iterator<String> iterator = map.keySet().iterator();
-			while (iterator.hasNext()) {
-				Node node = BN.getInstance().getNode(iterator.next());
+			Map<String, String> map = cpf.pop();
+			Iterator<String> mapIterator = map.keySet().iterator();
 
-				if (node.getParents().size() == 0) {
+			while (mapIterator.hasNext()) {
+				Node node = BN.getInstance().getNode(mapIterator.next());
+				Iterator<String> iterator = node.parentsIterator();
+
+				if (!iterator.hasNext()) {
 					list.add(node.getName() + "=" + map.get(node.getName()));
 					continue;
 				}
 
 				Set<String> set = new HashSet<>();
-				for (int i = 0; i < node.getParents().size(); i += 1) {
-					set.add(node.getParents().get(i) + "=" + map.get(node.getParents().get(i)));
+
+				while (iterator.hasNext()) {
+					String parent = iterator.next();
+					set.add(parent + "=" + map.get(parent));
 				}
 
 				list.add(node.getName() + "=" + map.get(node.getName()) + "|" + set);
@@ -48,31 +67,21 @@ public class Service {
 	}
 
 	/**
-	 * This method returns the sample set of the given query.
-	 */
-	public static List<String> getSampleSet(String query) {
-		List<String> sample = new ArrayList<>();
-		sample.add(query);
-		sample.addAll(Utensil.getComplementaryEvents(query));
-		return sample;
-	}
-
-	/**
 	 * This method calculates the probability of the given query.
 	 */
 	public static double calculateProbability(String query) {
-		Node node = BN.getInstance().getNode(query.substring(0, query.indexOf("=")));
-		if (node.getCpt().containsKey(query)) {
-			return node.getCpt().get(query);
+		Node node = BN.getInstance().getNode(Pruner.getX(query));
+		if (node.containsProbability(query)) {
+			return node.getProbability(query);
 		}
 
-		double probability = 1;
-		List<String> ce = Utensil.getComplementaryEvents(query);
+		double probability = 0;
+		Stack<String> ce = Utensil.getComplementaryEvents(query);
 
 		while (!ce.isEmpty()) {
-			probability = probability * (1 - node.getCpt().get(ce.remove(0)));
+			probability += node.getProbability(ce.pop());
 		}
 
-		return probability;
+		return 1 - probability;
 	}
 }

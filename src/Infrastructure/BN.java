@@ -13,7 +13,7 @@ public class BN {
 	private static BN instance = new BN();
 
 	/**
-	 * This method returns a single instance of the network.
+	 * This method returns a single instance of this network.
 	 */
 	public static BN getInstance() {
 		return instance;
@@ -34,9 +34,9 @@ public class BN {
 	}
 
 	/**
-	 * This method returns an iteration of the nodes in the network.
+	 * This method returns an iteration of the nodes in this network.
 	 */
-	public Iterator<Node> iteration() {
+	public Iterator<Node> nodesIterator() {
 		return network.values().iterator();
 	}
 }

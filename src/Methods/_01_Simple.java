@@ -1,6 +1,8 @@
 package Methods;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 import Tools.Service;
 
 /**
@@ -11,20 +13,29 @@ import Tools.Service;
 public class _01_Simple implements Probable {
 	@Override
 	public String inference(String query) {
+		DecimalFormat df = new DecimalFormat("0.00000");
+
 		int additions = 0;
 		int multiplications = 0;
 
 		// The sample set
-		List<String> space = Service.getSampleSet(query);
+		Stack<String> samples = Service.getSamples(query);
 
-		// The probabilities of the queries in the sample space
+		// The probabilities of the queries in the sample set
 		List<Double> probabilities = new ArrayList<>();
 
-		while (!space.isEmpty()) {
-			double result = 0;
+		while (!samples.isEmpty()) {
+			String sample = samples.pop();
 
-			// Represent the given query as a BN formula.
-			List<List<String>> formula = Service.getBNFormula(space.remove(0));
+			// The given query as a BN formula
+			List<List<String>> formula = Service.getBNFormula(sample);
+
+			if (formula == null) /* The formula could not be created */ {
+				System.out.println(df.format(Service.calculateProbability(sample)) + "," + 0 + "," + 0);
+				return df.format(Service.calculateProbability(sample)) + "," + 0 + "," + 0;
+			}
+
+			double result = 0;
 			additions += formula.size() - 1;
 
 			while (!formula.isEmpty()) /* Calculate the probability of each part in the formula */ {
@@ -50,8 +61,9 @@ public class _01_Simple implements Probable {
 			additions += 1;
 		}
 
-		System.out.println(result / sum + "," + additions + "," + multiplications);
+		result /= sum;
 
-		return result / sum + "," + additions + "," + multiplications;
+		System.out.println(df.format(result) + "," + additions + "," + multiplications);
+		return df.format(result) + "," + additions + "," + multiplications;
 	}
 }
