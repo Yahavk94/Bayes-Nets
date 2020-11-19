@@ -27,16 +27,16 @@ public class BN {
 	}
 
 	/**
-	 * This method returns the corresponding node.
+	 * This method returns the node to which the specified name is mapped.
 	 */
 	public Node getNode(String name) {
 		return network.get(name);
 	}
 
 	/**
-	 * This method returns an iteration of the nodes in this network.
+	 * This method returns an iterator over the nodes in this network.
 	 */
-	public Iterator<Node> nodesIterator() {
+	public Iterator<Node> iterator() {
 		return network.values().iterator();
 	}
 }

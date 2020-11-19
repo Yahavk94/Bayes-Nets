@@ -1,22 +1,22 @@
 package Infrastructure;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import Utils.Cpt;
 
 /**
  * This class represents a node.
  * @author Yahav Karpel
  */
 
-public class Node implements Comparable<Node> {
+public class Node {
 	private String name;
 
-	private List<String> values = new ArrayList<>();
-	private List<String> parents = new ArrayList<>();
+	private Set<String> values = new TreeSet<>();
+	private Set<String> parents = new TreeSet<>();
 
-	private Map<String, Double> cpt = new LinkedHashMap<>();
+	private Cpt cpt = new Cpt();
 
 	/**
 	 * This method constructs a new node.
@@ -33,63 +33,37 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * This method returns the conditional probability table of this node.
-	 */
-	public Map<String, Double> getCpt() {
-		return cpt;
-	}
-
-	/**
-	 * This method returns true if the cpt of this node contains the probability of the given query.
-	 */
-	public boolean containsProbability(String query) {
-		return cpt.containsKey(query);
-	}
-
-	/**
-	 * This method returns the probability of the given query.
-	 */
-	public double getProbability(String query) {
-		return cpt.get(query);
-	}
-
-	/**
-	 * This method returns the values of this node.
-	 */
-	public List<String> getValues() {
-		return values;
-	}
-
-	/**
-	 * This method returns an iteration of the values of this node.
+	 * This method returns an iterator over the values of this node.
 	 */
 	public Iterator<String> valuesIterator() {
 		return values.iterator();
 	}
 
 	/**
-	 * This method returns the parents of this node.
+	 * This method appends the specified value to the end of this values list.
 	 */
-	public List<String> getParents() {
-		return parents;
+	protected void insertValue(String value) {
+		values.add(value);
 	}
 
 	/**
-	 * This method returns an iteration of the parents of this node.
+	 * This method returns an iterator over the parents of this node.
 	 */
 	public Iterator<String> parentsIterator() {
 		return parents.iterator();
 	}
 
 	/**
-	 * For sorting purpose.
+	 * This method appends the specified parent to the end of this parents list.
 	 */
-	@Override
-	public int compareTo(Node node) {
-		if (values.size() > node.values.size()) {
-			return 1;
-		}
+	protected void insertParent(String parent) {
+		parents.add(parent);
+	}
 
-		return -1;
+	/**
+	 * This method returns the conditional probability table of this node.
+	 */
+	public Map<String, Double> getCpt() {
+		return cpt.getCpt();
 	}
 }

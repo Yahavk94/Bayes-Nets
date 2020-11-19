@@ -1,13 +1,15 @@
 package Tools;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Stack;
-import java.util.StringTokenizer;
 import Infrastructure.BN;
 import Infrastructure.Node;
+import Utils.Extract;
 
 /**
  * This class represents the methods which are used by the service.
@@ -19,9 +21,10 @@ public class Utensil {
 	 * This method breaks up the given query calculations into distinct parts.
 	 */
 	protected static Stack<Map<String, String>> completeProbabilityFormula(String query) {
-		Map<String, String> map = getQueryNodes(query);
-		List<String> nodes = getNonQueryNodes(map);
-		List<List<String>> cartesian = Utensil.cartesianProduct(clone(nodes));
+		Map<String, String> nonhidden = Extract.nonHiddenNodes(query);
+		List<String> hidden = Extract.hiddenNodes(query);
+
+		Queue<Queue<String>> cartesian = cartesianProduct(new ArrayList<>(hidden));
 		if (cartesian == null) /* The formula cannot be created */ {
 			return null;
 		}
@@ -30,14 +33,14 @@ public class Utensil {
 		Stack<Map<String, String>> cpf = new Stack<>();
 
 		while (!cartesian.isEmpty()) /* Generate the distinct parts of the formula */ {
-			Map<String, String> dp = Utensil.clone(map);
-			Iterator<String> iterator = nodes.iterator();
+			Map<String, String> dp = new HashMap<>(nonhidden);
+			Queue<String> values = cartesian.remove();
+			Iterator<String> iterator = hidden.iterator();
 
 			while (iterator.hasNext()) {
-				dp.put(BN.getInstance().getNode(iterator.next()).getName(), cartesian.get(0).remove(0));
+				dp.put(BN.getInstance().getNode(iterator.next()).getName(), values.remove());
 			}
 
-			cartesian.remove(0);
 			cpf.push(dp);
 		}
 
@@ -45,19 +48,21 @@ public class Utensil {
 	}
 
 	/**
-	 * This method returns the complementary events of the given query.
+	 * This method returns the complementary queries of the given query.
 	 */
-	protected static Stack<String> getComplementaryEvents(String query) {
+	protected static Stack<String> getComplementaryQueries(String query) {
+		Node node = BN.getInstance().getNode(Extract.QX(query));
+		String value = Extract.QV(query);
+
+		// The complementary queries of the given query
 		Stack<String> ce = new Stack<>();
 
-		Node node = BN.getInstance().getNode(Pruner.getX(query));
-		String current = Pruner.getVX(query);
-		Iterator<String> iterator = node.valuesIterator();
+		Iterator<String> valuesIterator = node.valuesIterator();
 
-		while (iterator.hasNext()) {
-			String candidate = iterator.next();
-			if (!current.equals(candidate)) {
-				ce.push(query.replaceFirst(current, candidate));
+		while (valuesIterator.hasNext()) {
+			String candidate = valuesIterator.next();
+			if (!candidate.equals(value)) {
+				ce.push(query.replaceFirst(value, candidate));
 			}
 		}
 
@@ -65,120 +70,59 @@ public class Utensil {
 	}
 
 	/**
-	 * This method returns the nodes that are in the given query.
+	 * This method returns the cartesian product of the values of the hidden nodes.
 	 */
-	private static Map<String, String> getQueryNodes(String query) {
-		Map<String, String> qn = new LinkedHashMap<>();
-
-		StringTokenizer st = new StringTokenizer(query, "|[]= ,");
-		while (st.hasMoreTokens()) {
-			qn.put(st.nextToken(), st.nextToken());
-		}
-
-		return qn;
-	}
-
-	/**
-	 * This method returns the nodes that are not in the given query.
-	 */
-	private static List<String> getNonQueryNodes(Map<String, String> qn) {
-		List<String> nqn = new ArrayList<>();
-		Iterator<Node> iterator = BN.getInstance().nodesIterator();
-
-		while (iterator.hasNext()) {
-			Node node = iterator.next();
-			if (!qn.containsKey(node.getName())) {
-				nqn.add(node.getName());
-			}
-		}
-
-		return nqn;
-	}
-
-	/**
-	 * This method returns the cartesian product of the values of the given nodes.
-	 */
-	private static List<List<String>> cartesianProduct(List<String> nodes) {
-		if (nodes.isEmpty()) /* The cartesian product cannot be performed */ {
+	private static Queue<Queue<String>> cartesianProduct(List<String> hidden) {
+		if (hidden.isEmpty()) /* The product cannot be performed */ {
 			return null;
 		}
 
-		// The cartesian product of the values of the nodes
-		List<List<String>> cartesian = new ArrayList<>();
+		// The cartesian product of the values of the hidden nodes
+		Queue<Queue<String>> cartesian = new LinkedList<>();
 
-		if (nodes.size() == 1) {
-			Iterator<String> iterator = BN.getInstance().getNode(nodes.remove(0)).valuesIterator();
+		if (hidden.size() == 1) {
+			Iterator<String> valuesIterator = BN.getInstance().getNode(hidden.remove(0)).valuesIterator();
 
-			while (iterator.hasNext()) {
-				List<String> list = new ArrayList<>();
-				list.add(iterator.next());
-				cartesian.add(list);
+			while (valuesIterator.hasNext()) {
+				Queue<String> queue = new LinkedList<>();
+				queue.add(valuesIterator.next());
+				cartesian.add(queue);
 			}
 
 			return cartesian;
 		}
 
-		Iterator<String> outer = BN.getInstance().getNode(nodes.remove(0)).valuesIterator();
+		Iterator<String> outer = BN.getInstance().getNode(hidden.remove(0)).valuesIterator();
 		while (outer.hasNext()) {
 			String value = outer.next();
-			Iterator<String> inner = BN.getInstance().getNode(nodes.get(0)).valuesIterator();
+			Iterator<String> inner = BN.getInstance().getNode(hidden.get(0)).valuesIterator();
 			while (inner.hasNext()) {
-				List<String> list = new ArrayList<>();
-				list.add(value);
-				list.add(inner.next());
-				cartesian.add(list);
+				Queue<String> queue = new LinkedList<>();
+				queue.add(value);
+				queue.add(inner.next());
+				cartesian.add(queue);
 			}
 		}
 
-		nodes.remove(0);
-		while (!nodes.isEmpty()) {
-			List<List<String>> temp = new ArrayList<>();
-			Node node = BN.getInstance().getNode(nodes.remove(0));
+		hidden.remove(0);
+		while (!hidden.isEmpty()) {
+			Queue<Queue<String>> temp = new LinkedList<>();
+			Node node = BN.getInstance().getNode(hidden.remove(0));
 
 			while (!cartesian.isEmpty()) {
-				Iterator<String> iterator = node.valuesIterator();
+				Queue<String> values = cartesian.remove();
+				Iterator<String> valuesIterator = node.valuesIterator();
 
-				while (iterator.hasNext()) {
-					List<String> list = clone(cartesian.get(0));
-					list.add(iterator.next());
-					temp.add(list);
+				while (valuesIterator.hasNext()) {
+					Queue<String> queue = new LinkedList<>(values);
+					queue.add(valuesIterator.next());
+					temp.add(queue);
 				}
-
-				cartesian.remove(0);
 			}
 
 			cartesian = temp;
 		}
 
 		return cartesian;
-	}
-
-	/**
-	 * This method returns a deep copy of the given list.
-	 */
-	private static List<String> clone(List<String> list) {
-		List<String> cloneList = new ArrayList<>();
-		Iterator<String> iterator = list.iterator();
-
-		while (iterator.hasNext()) {
-			cloneList.add(iterator.next());
-		}
-
-		return cloneList;
-	}
-
-	/**
-	 * This method returns a deep copy of the given map.
-	 */
-	private static Map<String, String> clone(Map<String, String> map) {
-		Map<String, String> cloneMap = new LinkedHashMap<>();
-		Iterator<String> iterator = map.keySet().iterator();
-
-		while (iterator.hasNext()) {
-			String X = iterator.next();
-			cloneMap.put(X, map.get(X));
-		}
-
-		return cloneMap;
 	}
 }
