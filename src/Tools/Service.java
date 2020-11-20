@@ -38,7 +38,6 @@ public class Service {
 			return node.getCpt().get(query);
 		}
 
-		// Calculate the probability of the complementary queries
 		double probability = 0;
 		Stack<String> ce = Utensil.getComplementaryQueries(query);
 		while (!ce.isEmpty()) {
@@ -62,11 +61,15 @@ public class Service {
 
 		while (!cpf.isEmpty()) {
 			Stack<String> stack = new Stack<>();
+
+			// A distinct part of the complete probability formula
 			Map<String, String> map = cpf.pop();
+
 			Iterator<String> mapIterator = map.keySet().iterator();
 
 			while (mapIterator.hasNext()) {
 				Node node = BN.getInstance().getNode(mapIterator.next());
+
 				Iterator<String> iterator = node.parentsIterator();
 
 				if (!iterator.hasNext()) {
@@ -94,55 +97,69 @@ public class Service {
 	 * This method returns the factors of the nodes in the network.
 	 */
 	public static Stack<Cpt> getFactors(String query) {
-		Map<String, String> evidence = Extract.evidenceNodes(query);
 		Iterator<Node> iterator = BN.getInstance().iterator();
 
 		// The factors of the nodes
 		Stack<Cpt> factors = new Stack<>();
 
+		Map<String, String> evidence = Extract.evidenceNodes(query);
+
 		while (iterator.hasNext()) {
-			Node node = iterator.next();
-			Iterator<String> cptIterator = node.getCpt().keySet().iterator();
+			Iterator<String> cptIterator = iterator.next().getCpt().iterator();
 
 			Cpt cpt = new Cpt();
 
-			if (evidence.containsKey(node.getName())) /* Not all queries must be considered */ {
-				while (cptIterator.hasNext()) {
-					String cp = cptIterator.next();
+			while (cptIterator.hasNext()) {
+				Stack<String> samples = getSamples(cptIterator.next());
 
-					if (cp.contains(node.getName() + "=" + evidence.get(node.getName()))) {
-						Set<String> ordered = Extract.orderedEvidence(cp);
+				while (!samples.isEmpty()) {
+					Iterator<String> mapIterator = evidence.keySet().iterator();
 
-						// Omit the evidence
-						ordered.remove(node.getName() + "=" + evidence.get(node.getName()));
+					boolean indicator = false;
+					String sample = samples.pop();
+					Set<String> ordered = Extract.ordered(sample);
 
-						cpt.insert(ordered.toString(), node.getCpt().get(cp));
+					while (mapIterator.hasNext()) {
+						if (ordered.isEmpty()) {
+							break;
+						}
+
+						String next = mapIterator.next();
+
+						if (ordered.contains(next + "=" + evidence.get(next))) /* Omit unnecessary information */ {
+							indicator = true;
+							ordered.remove(next + "=" + evidence.get(next));
+						}
+					}
+
+					if (indicator) {
+						if (!ordered.isEmpty()) {
+							cpt.put(ordered.toString(), calculateProbability(sample));
+						}
+
 						continue;
 					}
 
-					Stack<String> ce = Utensil.getComplementaryQueries(cp);
-					while (!ce.isEmpty()) {
-						cp = ce.pop();
-						cpt.insert(Extract.orderedEvidence(cp).toString(), calculateProbability(cp));
+					// Note that indicator = false
+					Iterator<String> setIterator = ordered.iterator();
+
+					while (setIterator.hasNext()) {
+						String next = setIterator.next();
+						if (evidence.containsKey(Extract.QX(next))) {
+							indicator = true;
+							break;
+						}
+					}
+
+					if (!indicator) /* Avoid adding unnecessary information */ {
+						cpt.put(ordered.toString(), calculateProbability(sample));
 					}
 				}
+			}
 
+			if (!cpt.isEmpty()) /* Unable to add an empty cpt */ {
 				factors.push(cpt);
-				continue;
 			}
-
-			while (cptIterator.hasNext()) /* All queries must be considered */ {
-				String cp = cptIterator.next();
-				cpt.insert(Extract.orderedEvidence(cp).toString(), node.getCpt().get(cp));
-
-				Stack<String> ce = Utensil.getComplementaryQueries(cp);
-				while (!ce.isEmpty()) {
-					cp = ce.pop();
-					cpt.insert(Extract.orderedEvidence(cp).toString(), calculateProbability(cp));
-				}
-			}
-
-			factors.push(cpt);
 		}
 
 		return factors;
@@ -151,40 +168,38 @@ public class Service {
 	/**
 	 * This method joins the given factors.
 	 */
-	public static Queue<Cpt> joinFactors(Queue<Cpt> minHeap) {
-		Cpt first = minHeap.remove();
+	public static Queue<Cpt> mulFactors(Queue<Cpt> minHeap) {
+		Cpt min = minHeap.remove();
 
 		while (!minHeap.isEmpty()) {
-			Cpt second = minHeap.remove();
+			Iterator<String> minIterator = min.iterator();
 
-			// Temporary
 			Cpt cpt = new Cpt();
+			Cpt top = minHeap.remove();
 
-			Iterator<String> firstIterator = first.keySet().iterator();
+			while (minIterator.hasNext()) {
+				Iterator<String> topIterator = top.iterator();
 
-			while (firstIterator.hasNext()) {
-				Set<String> orderedOuter = Extract.orderedEvidence(firstIterator.next());
-				Iterator<String> secondIterator = second.keySet().iterator();
+				Set<String> outer = Extract.ordered(minIterator.next());
 
-				while (secondIterator.hasNext()) {
-					Set<String> orderedInner = Extract.orderedEvidence(secondIterator.next());
+				while (topIterator.hasNext()) {
+					Set<String> inner = Extract.ordered(topIterator.next());
 
-					if (Collections.disjoint(orderedInner, orderedOuter)) {
+					if (Collections.disjoint(outer, inner)) /* Unable to join */ {
 						continue;
 					}
 
-					Set<String> clone = new TreeSet<>(orderedOuter);
-					clone.addAll(orderedInner);
+					Set<String> clone = new TreeSet<>(outer);
+					clone.addAll(inner);
 
-					cpt.insert(clone.toString(), first.get(orderedOuter.toString()) * second.get(orderedInner.toString()));
+					cpt.put(clone.toString(), min.get(outer.toString()) * top.get(inner.toString()));
 				}
 			}
 
-			first = cpt;
+			min = cpt;
 		}
 
-		minHeap.add(first);
-
+		minHeap.add(min);
 		return minHeap;
 	}
 }

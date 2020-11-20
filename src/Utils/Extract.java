@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
-
 import Infrastructure.BN;
 import Infrastructure.Node;
 
@@ -89,7 +88,7 @@ public class Extract {
 		return nonhidden;
 	}
 
-	public static Set<String> orderedEvidence(String query) {
+	public static Set<String> ordered(String query) {
 		Set<String> set = new TreeSet<>();
 
 		StringTokenizer st = new StringTokenizer(query, "|[] ,");

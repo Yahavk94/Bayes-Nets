@@ -1,7 +1,6 @@
 package Utils;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -13,20 +12,9 @@ public class Cpt implements Comparable<Cpt> {
 	private Map<String, Double> table = new TreeMap<>();
 
 	/**
-	 * This method returns this conditional probability table.
-	 */
-	public Map<String, Double> getCpt() {
-		return table;
-	}
-
-	public boolean isEmpty() {
-		return table.isEmpty();
-	}
-
-	/**
 	 * This method returns true if this cpt contains a mapping for the specified query.
 	 */
-	public boolean contains(String query) {
+	public boolean containsKey(String query) {
 		return table.containsKey(query);
 	}
 
@@ -38,20 +26,10 @@ public class Cpt implements Comparable<Cpt> {
 	}
 
 	/**
-	 * This method associates the specified probability with the specified query in this cpt.
+	 * This method returns true if this cpt contains no mappings.
 	 */
-	public void insert(String query, double probability) {
-		table.put(query, probability);
-	}
-
-	public String remove() {
-		String st = ((TreeMap<String, Double>)table).firstKey();
-		table.remove(st);
-		return st;
-	}
-
-	public void remove(String query) {
-		table.remove(query);
+	public boolean isEmpty() {
+		return table.isEmpty();
 	}
 
 	/**
@@ -62,18 +40,10 @@ public class Cpt implements Comparable<Cpt> {
 	}
 
 	/**
-	 * This method returns a set view of the queries contained in this cpt.
+	 * This method associates the specified probability with the specified query in this cpt.
 	 */
-	public Set<String> keySet() {
-		return table.keySet();
-	}
-
-	/**
-	 * This method returns the string representation of this cpt.
-	 */
-	@Override
-	public String toString() {
-		return table.toString();
+	public void put(String query, double probability) {
+		table.put(query, probability);
 	}
 
 	/**

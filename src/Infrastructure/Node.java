@@ -1,6 +1,5 @@
 package Infrastructure;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import Utils.Cpt;
@@ -63,7 +62,7 @@ public class Node {
 	/**
 	 * This method returns the conditional probability table of this node.
 	 */
-	public Map<String, Double> getCpt() {
-		return cpt.getCpt();
+	public Cpt getCpt() {
+		return cpt;
 	}
 }

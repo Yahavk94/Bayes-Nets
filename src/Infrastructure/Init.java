@@ -57,10 +57,11 @@ public class Init {
 				continue;
 			}
 
-			// Initialize the conditional probabilities of the current node
+			// Initialize the conditional probability table of the current node
 			st = new StringTokenizer(Input.nodes.remove(0), " ,");
 			while (st.hasMoreTokens()) {
 				Set<String> ordered = new HashSet<>();
+
 				Iterator<String> iterator = current.parentsIterator();
 
 				while (iterator.hasNext()) {

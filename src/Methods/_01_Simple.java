@@ -39,14 +39,15 @@ public class _01_Simple implements Probable {
 			additions += formula.size() - 1;
 
 			while (!formula.isEmpty()) /* Calculate the probability of each part in the formula */ {
-				double probability = 1;
-				multiplications += formula.peek().size() - 1;
+				Stack<String> stack = formula.remove();
 
-				while (!formula.peek().isEmpty()) {
-					probability = probability * Service.calculateProbability(formula.peek().pop());
+				double probability = 1;
+				multiplications += stack.size() - 1;
+
+				while (!stack.isEmpty()) {
+					probability = probability * Service.calculateProbability(stack.pop());
 				}
 
-				formula.remove();
 				result += probability;
 			}
 

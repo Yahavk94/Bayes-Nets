@@ -30,6 +30,7 @@ public class _02_VE implements Probable {
 		List<String> hidden = Extract.hiddenNodes(query);
 
 		if (hidden.isEmpty()) {
+			System.out.println(df.format(Service.calculateProbability(query)) + "," + 0 + "," + 0);
 			return df.format(Service.calculateProbability(query)) + "," + 0 + "," + 0;
 		}
 
@@ -42,80 +43,67 @@ public class _02_VE implements Probable {
 		Stack<Cpt> factors = Service.getFactors(query);
 
 		while (!hidden.isEmpty()) {
-			String node = hidden.remove(0);
-			Stack<Cpt> temp = new Stack<>();
+			String X = hidden.remove(0);
+			Stack<Cpt> stack = new Stack<>();
 
 			while (!factors.isEmpty()) {
-				temp.push(factors.pop());
-				Iterator<String> iterator = temp.peek().iterator();
+				stack.push(factors.pop());
+				Iterator<String> iterator = stack.peek().iterator();
 
 				while (iterator.hasNext()) {
-					if (iterator.next().contains(node)) {
-						minHeap.add(temp.pop());
+					if (iterator.next().contains(X)) {
+						minHeap.add(stack.pop());
 						break;
 					}
 				}
 			}
 
-			factors = temp;
+			factors = stack;
 
 			// Join
-			minHeap = Service.joinFactors(minHeap);
+			minHeap = Service.mulFactors(minHeap);
 
 			// Eliminate
-			Cpt first = minHeap.remove();
-			multiplications += first.getCpt().size();
+			Cpt top = minHeap.remove();
+			Iterator<String> iterator = top.iterator();
 
 			Cpt cpt = new Cpt();
-			System.out.println(multiplications);
 
-			Iterator<String> iterator = first.getCpt().keySet().iterator();
+			while (iterator.hasNext()) {
+				String value = BN.getInstance().getNode(X).valuesIterator().next();
 
-			for (int i = 0; i < first.getCpt().keySet().size(); i += 1) {
-				String val = BN.getInstance().getNode(node).valuesIterator().next();
+				String current = iterator.next();
+				Set<String> ordered = Extract.ordered(current);
 
-				String q = iterator.next();
-				Set<String> ordered = Extract.orderedEvidence(q);
+				double probability = 0;
 
-				double prob = 0;
+				if (current.contains(X + "=" + value)) {
+					Iterator<String> valuesIterator = BN.getInstance().getNode(X).valuesIterator();
 
-				if (q.contains(node + "=" + val)) {
-					Iterator<String> valuesIterator = BN.getInstance().getNode(node).valuesIterator();
 					while (valuesIterator.hasNext()) {
-						String value = valuesIterator.next();
-						if (q.contains(node + "=" + value)) {
-							prob += first.getCpt().get(ordered.toString());
-							continue;
-						}
+						String candidate = valuesIterator.next();
 
-						Set<String> tempSet = Extract.orderedEvidence(q.replace(node + "=" + val, node + "=" + value));
-						prob = prob + first.getCpt().get(tempSet.toString());
-						additions += 1;
-
-						ordered.remove(node + "=" + val);
-						cpt.getCpt().put(ordered.toString(), prob);
+						Set<String> temp = Extract.ordered(current.replace(X + "=" + value, X + "=" + candidate));
+						probability += top.get(temp.toString());
 					}
+
+					ordered.remove(X + "=" + value);
+					cpt.put(ordered.toString(), probability);
 				}
 			}
 
-			first = cpt;
-			minHeap.add(first);
-			//System.out.println(first);
+			minHeap.add(cpt);
 		}
 
-		while (!factors.isEmpty()) {
-			System.out.println(factors.peek());
+		//System.out.println(minHeap.peek());
+
+		while (!factors.isEmpty()) /* Join all remaining factors */ {
 			minHeap.add(factors.pop());
-			minHeap = Service.joinFactors(minHeap);
-			multiplications += minHeap.peek().getCpt().size();
+			minHeap = Service.mulFactors(minHeap);
 		}
-
-		System.out.println(minHeap);
 
 		Map<String, String> qn = Extract.queryNode(query);
-		Iterator<String> iterator = qn.keySet().iterator();
-
-		String qnode = iterator.next();
+		String qnode = qn.keySet().iterator().next();
 		qnode += "=" + qn.get(qnode);
 
 		double result = 0;
@@ -123,15 +111,15 @@ public class _02_VE implements Probable {
 
 		while (!minHeap.isEmpty()) {
 			Cpt cpt = minHeap.remove();
-			Iterator<String> iter = cpt.iterator();
+			Iterator<String> iterator = cpt.iterator();
 
-			while (iter.hasNext()) {
-				String next = iter.next();
+			while (iterator.hasNext()) {
+				String next = iterator.next();
 				if (next.contains(qnode)) {
-					result = cpt.getCpt().get(next);
+					result = cpt.get(next);
 				}
 
-				sum += cpt.getCpt().get(next);
+				sum += cpt.get(next);
 			}
 		}
 
