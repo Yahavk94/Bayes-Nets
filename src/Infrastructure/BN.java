@@ -1,7 +1,7 @@
 package Infrastructure;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * This class represents a Bayesian Network.
@@ -13,17 +13,17 @@ public class BN {
 	private static BN instance = new BN();
 
 	/**
+	 * This method constructs a new network.
+	 */
+	private BN() {
+		network = Init.initFromFile(new TreeMap<>());
+	}
+
+	/**
 	 * This method returns a single instance of this network.
 	 */
 	public static BN getInstance() {
 		return instance;
-	}
-
-	/**
-	 * This method constructs a new network.
-	 */
-	private BN() {
-		network = Init.initFromFile(new HashMap<>());
 	}
 
 	/**

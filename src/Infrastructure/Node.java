@@ -1,7 +1,7 @@
 package Infrastructure;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.TreeSet;
 import Utils.Cpt;
 
 /**
@@ -9,11 +9,11 @@ import Utils.Cpt;
  * @author Yahav Karpel
  */
 
-public class Node {
+public class Node implements Comparable<Node> {
 	private String name;
 
-	private Set<String> values = new TreeSet<>();
-	private Set<String> parents = new TreeSet<>();
+	private Set<String> values = new HashSet<>();
+	private Set<String> parents = new HashSet<>();
 
 	private Cpt cpt = new Cpt();
 
@@ -64,5 +64,17 @@ public class Node {
 	 */
 	public Cpt getCpt() {
 		return cpt;
+	}
+
+	/**
+	 * For sorting purpose.
+	 */
+	@Override
+	public int compareTo(Node node) {
+		if (parents.size() > node.parents.size()) {
+			return 1;
+		}
+
+		return -1;
 	}
 }

@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
-import java.util.TreeSet;
 import Infrastructure.BN;
 import Infrastructure.Node;
 import Utils.Cpt;
@@ -19,10 +18,15 @@ import Utils.Extract;
  */
 
 public class Service {
+	private static int adds;
+	private static int muls;
+
 	/**
 	 * This method returns the sample set associated with the given query.
 	 */
 	public static Stack<String> getSamples(String query) {
+		adds = muls = 0;
+
 		Stack<String> samples = Utensil.getComplementaryQueries(query);
 		samples.push(query);
 		return samples;
@@ -39,12 +43,28 @@ public class Service {
 		}
 
 		double probability = 0;
+
 		Stack<String> ce = Utensil.getComplementaryQueries(query);
 		while (!ce.isEmpty()) {
 			probability += node.getCpt().get(ce.pop());
 		}
 
 		return 1 - probability;
+	}
+
+	/**
+	 * This method returns the normalization of the required probability.
+	 */
+	public static double normalization(Queue<Double> probabilities) {
+		double required = probabilities.remove();
+		double total = required;
+
+		while (!probabilities.isEmpty()) {
+			total += probabilities.remove();
+			adds += 1;
+		}
+
+		return required / total;
 	}
 
 	/**
@@ -56,20 +76,19 @@ public class Service {
 			return null;
 		}
 
+		adds += cpf.size() - 1;
+
 		// The distinct parts of the formula
 		Queue<Stack<String>> formula = new LinkedList<>();
 
 		while (!cpf.isEmpty()) {
 			Stack<String> stack = new Stack<>();
 
-			// A distinct part of the complete probability formula
 			Map<String, String> map = cpf.pop();
-
 			Iterator<String> mapIterator = map.keySet().iterator();
 
 			while (mapIterator.hasNext()) {
 				Node node = BN.getInstance().getNode(mapIterator.next());
-
 				Iterator<String> iterator = node.parentsIterator();
 
 				if (!iterator.hasNext()) {
@@ -77,17 +96,18 @@ public class Service {
 					continue;
 				}
 
-				Set<String> ordered = new HashSet<>();
+				Set<String> set = new HashSet<>();
 
 				while (iterator.hasNext()) {
 					String parent = iterator.next();
-					ordered.add(parent + "=" + map.get(parent));
+					set.add(parent + "=" + map.get(parent));
 				}
 
-				stack.push(node.getName() + "=" + map.get(node.getName()) + "|" + ordered);
+				stack.push(node.getName() + "=" + map.get(node.getName()) + "|" + set);
 			}
 
 			formula.add(stack);
+			muls += stack.size() - 1;
 		}
 
 		return formula;
@@ -98,11 +118,10 @@ public class Service {
 	 */
 	public static Stack<Cpt> getFactors(String query) {
 		Iterator<Node> iterator = BN.getInstance().iterator();
+		Map<String, String> evidence = Extract.evidenceNodes(query);
 
 		// The factors of the nodes
 		Stack<Cpt> factors = new Stack<>();
-
-		Map<String, String> evidence = Extract.evidenceNodes(query);
 
 		while (iterator.hasNext()) {
 			Iterator<String> cptIterator = iterator.next().getCpt().iterator();
@@ -117,42 +136,41 @@ public class Service {
 
 					boolean indicator = false;
 					String sample = samples.pop();
-					Set<String> ordered = Extract.ordered(sample);
+					Set<String> set = Extract.ordered(sample);
 
 					while (mapIterator.hasNext()) {
-						if (ordered.isEmpty()) {
-							break;
-						}
+						String X = mapIterator.next();
 
-						String next = mapIterator.next();
-
-						if (ordered.contains(next + "=" + evidence.get(next))) /* Omit unnecessary information */ {
+						if (set.contains(X + "=" + evidence.get(X))) /* Omit unnecessary information */ {
 							indicator = true;
-							ordered.remove(next + "=" + evidence.get(next));
+
+							set.remove(X + "=" + evidence.get(X));
+							if (set.isEmpty()) {
+								break;
+							}
 						}
 					}
 
 					if (indicator) {
-						if (!ordered.isEmpty()) {
-							cpt.put(ordered.toString(), calculateProbability(sample));
+						if (!set.isEmpty()) {
+							cpt.put(set.toString(), calculateProbability(sample));
 						}
 
 						continue;
 					}
 
 					// Note that indicator = false
-					Iterator<String> setIterator = ordered.iterator();
+					Iterator<String> setIterator = set.iterator();
 
 					while (setIterator.hasNext()) {
-						String next = setIterator.next();
-						if (evidence.containsKey(Extract.QX(next))) {
+						if (evidence.containsKey(Extract.QX(setIterator.next()))) {
 							indicator = true;
 							break;
 						}
 					}
 
 					if (!indicator) /* Avoid adding unnecessary information */ {
-						cpt.put(ordered.toString(), calculateProbability(sample));
+						cpt.put(set.toString(), calculateProbability(sample));
 					}
 				}
 			}
@@ -173,26 +191,26 @@ public class Service {
 
 		while (!minHeap.isEmpty()) {
 			Iterator<String> minIterator = min.iterator();
+			Cpt top = minHeap.remove();
 
 			Cpt cpt = new Cpt();
-			Cpt top = minHeap.remove();
 
 			while (minIterator.hasNext()) {
 				Iterator<String> topIterator = top.iterator();
-
 				Set<String> outer = Extract.ordered(minIterator.next());
 
 				while (topIterator.hasNext()) {
 					Set<String> inner = Extract.ordered(topIterator.next());
 
-					if (Collections.disjoint(outer, inner)) /* Unable to join */ {
+					if (Collections.disjoint(outer, inner)) {
 						continue;
 					}
 
-					Set<String> clone = new TreeSet<>(outer);
-					clone.addAll(inner);
+					Set<String> set = new HashSet<>(outer);
+					set.addAll(inner);
 
-					cpt.put(clone.toString(), min.get(outer.toString()) * top.get(inner.toString()));
+					cpt.put(set.toString(), min.get(outer.toString()) * top.get(inner.toString()));
+					muls += 1;
 				}
 			}
 
@@ -201,5 +219,49 @@ public class Service {
 
 		minHeap.add(min);
 		return minHeap;
+	}
+
+	/**
+	 * This method eliminates the given factor.
+	 */
+	public static Cpt eliminateFactor(Cpt top, Node node) {
+		Iterator<String> iterator = top.iterator();
+
+		Cpt cpt = new Cpt();
+
+		while (iterator.hasNext()) {
+			String value = node.valuesIterator().next();
+
+			String current = iterator.next();
+			Set<String> set = Extract.ordered(current);
+
+			double probability = top.get(set.toString());
+
+			if (current.contains(node.getName() + "=" + value)) {
+				Iterator<String> valuesIterator = node.valuesIterator();
+
+				while (valuesIterator.hasNext()) {
+					String candidate = valuesIterator.next();
+
+					if (!candidate.equals(value)) {
+						String temp = current.replace(node.getName() + "=" + value, node.getName() + "=" + candidate);
+						probability += top.get(Extract.ordered(temp).toString());
+						adds += 1;
+					}
+				}
+
+				set.remove(node.getName() + "=" + value);
+				cpt.put(set.toString(), probability);
+			}
+		}
+
+		return cpt;
+	}
+
+	/**
+	 * This method returns the number of additions and multiplications.
+	 */
+	public static String getComplexity() {
+		return adds + "," + muls;
 	}
 }

@@ -1,25 +1,25 @@
 package Utils;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.TreeSet;
 import Infrastructure.BN;
 import Infrastructure.Node;
 
 public class Extract {
 	/**
-	 * This method returns the leftmost random variable of the given query.
+	 * This method returns the query random variable.
 	 */
 	public static String QX(String query) {
 		return query.substring(0, query.indexOf("="));
 	}
 
 	/**
-	 * This method returns the value of the leftmost random variable of the given query.
+	 * This method returns the value of the query random variable.
 	 */
 	public static String QV(String query) {
 		if (!query.contains("|")) {
@@ -32,25 +32,19 @@ public class Extract {
 	/**
 	 * This method returns the query node.
 	 */
-	public static Map<String, String> queryNode(String query) {
-		Map<String, String> qn = new LinkedHashMap<>();
-
-		StringTokenizer st;
+	public static String QN(String query) {
 		if (!query.contains("|")) {
-			st = new StringTokenizer(query, "=");
-		} else {
-			st = new StringTokenizer(query.substring(0, query.indexOf("|")), "=");
+			return query;
 		}
 
-		qn.put(st.nextToken(), st.nextToken());
-		return qn;
+		return query.substring(0, query.indexOf("|"));
 	}
 
 	/**
-	 * This method returns the evidence nodes.
+	 * This method returns the evidence nodes of the given query.
 	 */
 	public static Map<String, String> evidenceNodes(String query) {
-		Map<String, String> nonhidden = new LinkedHashMap<>();
+		Map<String, String> nonhidden = new HashMap<>();
 
 		if (!query.contains("|")) {
 			return nonhidden;
@@ -65,31 +59,35 @@ public class Extract {
 	}
 
 	/**
-	 * This method returns the hidden nodes.
+	 * This method returns the hidden nodes of the given query.
 	 */
-	public static List<String> hiddenNodes(String query) {
-		List<String> hidden = new ArrayList<>();
-		Map<String, String> nonhidden = nonHiddenNodes(query);
+	public static List<Node> hiddenNodes(String query) {
 		Iterator<Node> iterator = BN.getInstance().iterator();
 
+		List<Node> hidden = new ArrayList<>();
+		Map<String, String> nonhidden = nonHiddenNodes(query);
+
 		while (iterator.hasNext()) {
-			String X = iterator.next().getName();
-			if (!nonhidden.containsKey(X)) {
-				hidden.add(X);
+			Node node = iterator.next();
+			if (!nonhidden.containsKey(node.getName())) {
+				hidden.add(node);
 			}
 		}
 
 		return hidden;
 	}
 
+	/**
+	 * This method returns the non hidden nodes of the given query.
+	 */
 	public static Map<String, String> nonHiddenNodes(String query) {
 		Map<String, String> nonhidden = evidenceNodes(query);
-		nonhidden.putAll(queryNode(query));
+		nonhidden.put(QX(query), QV(query));
 		return nonhidden;
 	}
 
 	public static Set<String> ordered(String query) {
-		Set<String> set = new TreeSet<>();
+		Set<String> set = new HashSet<>();
 
 		StringTokenizer st = new StringTokenizer(query, "|[] ,");
 		while (st.hasMoreTokens()) {

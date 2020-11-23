@@ -21,11 +21,9 @@ public class Utensil {
 	 * This method breaks up the given query calculations into distinct parts.
 	 */
 	protected static Stack<Map<String, String>> completeProbabilityFormula(String query) {
-		List<String> hidden = Extract.hiddenNodes(query);
+		List<Node> hidden = Extract.hiddenNodes(query);
 
-		// The cartesian product of the values of the hidden nodes
 		Queue<Queue<String>> cartesian = cartesianProduct(new ArrayList<>(hidden));
-
 		if (cartesian == null) /* The formula cannot be created */ {
 			return null;
 		}
@@ -35,15 +33,13 @@ public class Utensil {
 		// The distinct parts of the given query
 		Stack<Map<String, String>> cpf = new Stack<>();
 
-		while (!cartesian.isEmpty()) /* Generate the distinct parts of the formula */ {
-			Iterator<String> iterator = hidden.iterator();
+		while (!cartesian.isEmpty()) {
+			Iterator<Node> iterator = hidden.iterator();
 			Queue<String> values = cartesian.remove();
-
-			// A distinct part of the formula
 			Map<String, String> dp = new HashMap<>(nonhidden);
 
 			while (iterator.hasNext()) {
-				dp.put(BN.getInstance().getNode(iterator.next()).getName(), values.remove());
+				dp.put(iterator.next().getName(), values.remove());
 			}
 
 			cpf.push(dp);
@@ -56,10 +52,10 @@ public class Utensil {
 	 * This method returns the complementary queries of the given query.
 	 */
 	protected static Stack<String> getComplementaryQueries(String query) {
-		String value = Extract.QV(query);
 		Iterator<String> iterator = BN.getInstance().getNode(Extract.QX(query)).valuesIterator();
+		String value = Extract.QV(query);
 
-		// The complementary queries of the given query
+		// The complementary queries
 		Stack<String> ce = new Stack<>();
 
 		while (iterator.hasNext()) {
@@ -75,16 +71,15 @@ public class Utensil {
 	/**
 	 * This method returns the cartesian product of the values of the hidden nodes.
 	 */
-	private static Queue<Queue<String>> cartesianProduct(List<String> hidden) {
+	private static Queue<Queue<String>> cartesianProduct(List<Node> hidden) {
 		if (hidden.isEmpty()) /* The product cannot be performed */ {
 			return null;
 		}
 
-		// The cartesian product of the values of the hidden nodes
 		Queue<Queue<String>> cartesian = new LinkedList<>();
 
 		if (hidden.size() == 1) {
-			Iterator<String> iterator = BN.getInstance().getNode(hidden.remove(0)).valuesIterator();
+			Iterator<String> iterator = hidden.remove(0).valuesIterator();
 
 			while (iterator.hasNext()) {
 				Queue<String> queue = new LinkedList<>();
@@ -95,12 +90,11 @@ public class Utensil {
 			return cartesian;
 		}
 
-		// Create all possible pairs
-		Iterator<String> outer = BN.getInstance().getNode(hidden.remove(0)).valuesIterator();
+		// Generate all possible pairs
+		Iterator<String> outer = hidden.remove(0).valuesIterator();
 
 		while (outer.hasNext()) {
-			Iterator<String> inner = BN.getInstance().getNode(hidden.get(0)).valuesIterator();
-
+			Iterator<String> inner = hidden.get(0).valuesIterator();
 			String value = outer.next();
 
 			while (inner.hasNext()) {
@@ -112,13 +106,12 @@ public class Utensil {
 		}
 
 		hidden.remove(0);
-		while (!hidden.isEmpty()) /* Create all possible N tuples */ {
+		while (!hidden.isEmpty()) /* Generate all possible N tuples */ {
 			Queue<Queue<String>> temp = new LinkedList<>();
-			Node node = BN.getInstance().getNode(hidden.remove(0));
+			Node node = hidden.remove(0);
 
 			while (!cartesian.isEmpty()) {
 				Iterator<String> iterator = node.valuesIterator();
-
 				Queue<String> values = cartesian.remove();
 
 				while (iterator.hasNext()) {

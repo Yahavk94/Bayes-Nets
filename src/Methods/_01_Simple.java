@@ -15,14 +15,11 @@ public class _01_Simple implements Probable {
 	public String inference(String query) {
 		DecimalFormat df = new DecimalFormat("0.00000");
 
-		int additions = 0;
-		int multiplications = 0;
-
 		// The samples set
 		Stack<String> samples = Service.getSamples(query);
 
-		// The probabilities of the queries in the samples set
-		Queue<Double> probabilities = new LinkedList<>();
+		// The results of the queries in the samples set
+		Queue<Double> results = new LinkedList<>();
 
 		while (!samples.isEmpty()) {
 			String sample = samples.pop();
@@ -31,18 +28,16 @@ public class _01_Simple implements Probable {
 			Queue<Stack<String>> formula = Service.getBNFormula(sample);
 
 			if (formula == null) /* The formula could not be created */ {
-				System.out.println(df.format(Service.calculateProbability(sample)) + "," + 0 + "," + 0);
-				return df.format(Service.calculateProbability(sample)) + "," + 0 + "," + 0;
+				System.out.println(df.format(Service.calculateProbability(sample)) + "," + Service.getComplexity());
+				return null;
 			}
 
 			double result = 0;
-			additions += formula.size() - 1;
 
 			while (!formula.isEmpty()) /* Calculate the probability of each part in the formula */ {
 				Stack<String> stack = formula.remove();
 
 				double probability = 1;
-				multiplications += stack.size() - 1;
 
 				while (!stack.isEmpty()) {
 					probability = probability * Service.calculateProbability(stack.pop());
@@ -51,18 +46,10 @@ public class _01_Simple implements Probable {
 				result += probability;
 			}
 
-			probabilities.add(result);
+			results.add(result);
 		}
 
-		// Normalization
-		double result = probabilities.remove();
-		double sum = result;
-		while (!probabilities.isEmpty()) {
-			sum += probabilities.remove();
-			additions += 1;
-		}
-
-		System.out.println(df.format(result / sum) + "," + additions + "," + multiplications);
-		return df.format(result / sum) + "," + additions + "," + multiplications;
+		System.out.println(df.format(Service.normalization(results)) + "," + Service.getComplexity());
+		return null;
 	}
 }

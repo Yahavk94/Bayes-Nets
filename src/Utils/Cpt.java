@@ -1,7 +1,7 @@
 package Utils;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * This class represents a conditional probability table.
@@ -9,7 +9,7 @@ import java.util.TreeMap;
  */
 
 public class Cpt implements Comparable<Cpt> {
-	private Map<String, Double> table = new TreeMap<>();
+	private Map<String, Double> table = new HashMap<>();
 
 	/**
 	 * This method returns true if this cpt contains a mapping for the specified query.
@@ -44,6 +44,13 @@ public class Cpt implements Comparable<Cpt> {
 	 */
 	public void put(String query, double probability) {
 		table.put(query, probability);
+	}
+
+	/**
+	 * This method returns the number of mappings in this cpt.
+	 */
+	public int size() {
+		return table.keySet().size();
 	}
 
 	/**
