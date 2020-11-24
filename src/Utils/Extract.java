@@ -12,14 +12,14 @@ import Infrastructure.Node;
 
 public class Extract {
 	/**
-	 * This method returns the query random variable.
+	 * This method extracts the query variable out of the given query.
 	 */
 	public static String QX(String query) {
 		return query.substring(0, query.indexOf("="));
 	}
 
 	/**
-	 * This method returns the value of the query random variable.
+	 * This method extracts the value of the query variable out of the given query.
 	 */
 	public static String QV(String query) {
 		if (!query.contains("|")) {
@@ -95,5 +95,21 @@ public class Extract {
 		}
 
 		return set;
+	}
+
+	public static int asciiSum(String query) {
+		Iterator<String> iterator = ordered(query).iterator();
+
+		int ascii = 0;
+		while (iterator.hasNext()) {
+			String X = QX(iterator.next());
+
+			while (!X.isEmpty()) {
+				ascii += (int)X.charAt(0);
+				X = X.substring(1);
+			}
+		}
+
+		return ascii;
 	}
 }

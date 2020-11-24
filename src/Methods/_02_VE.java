@@ -21,12 +21,14 @@ public class _02_VE implements Probable {
 	public String inference(String query) {
 		DecimalFormat df = new DecimalFormat("0.00000");
 
+		// Reset the number of additions and multiplications
+		Service.reset();
+
 		// The hidden nodes of the given query
 		List<Node> hidden = Extract.hiddenNodes(query);
 
 		if (hidden.isEmpty()) {
-			System.out.println(df.format(Service.calculateProbability(query)) + "," + Service.getComplexity());
-			return null;
+			return df.format(Service.calculateProbability(query)) + "," + Service.getComplexity();
 		}
 
 		Queue<Cpt> minHeap = new PriorityQueue<>();
@@ -34,8 +36,8 @@ public class _02_VE implements Probable {
 		// The initial factors
 		Stack<Cpt> factors = Service.getFactors(query);
 
-		while (!hidden.isEmpty()) {
-			Node node = hidden.remove(0);
+		while (!hidden.isEmpty()) /* Join and eliminate the factors of the hidden nodes */ {
+			Node current = hidden.remove(0);
 			Stack<Cpt> temp = new Stack<>();
 
 			while (!factors.isEmpty()) {
@@ -43,7 +45,7 @@ public class _02_VE implements Probable {
 				Iterator<String> iterator = temp.peek().iterator();
 
 				while (iterator.hasNext()) {
-					if (iterator.next().contains(node.getName())) {
+					if (iterator.next().contains(current.getName())) {
 						minHeap.add(temp.pop());
 						break;
 					}
@@ -56,37 +58,38 @@ public class _02_VE implements Probable {
 			minHeap = Service.mulFactors(minHeap);
 
 			// Eliminate
-			minHeap.add(Service.eliminateFactor(minHeap.remove(), node));
+			minHeap.add(Service.eliminateFactor(minHeap.remove(), current));
 		}
 
-		while (!factors.isEmpty()) {
+		while (!factors.isEmpty()) /* Join the remaining factors */ {
 			minHeap.add(factors.pop());
 			minHeap = Service.mulFactors(minHeap);
 		}
 
-		Stack<Double> stack = new Stack<>();
-		Queue<Double> results = new LinkedList<>();
-
-		String queryNode = Extract.QN(query);
-
 		Cpt cpt = minHeap.remove();
 		Iterator<String> iterator = cpt.iterator();
 
+		// The query node
+		String qn = Extract.QN(query);
+
+		// The results of the queries in the remaining cpt
+		Queue<Double> results = new LinkedList<>();
+		Stack<Double> temp = new Stack<>();
+
 		while (iterator.hasNext()) {
-			String next = iterator.next();
-			if (next.contains(queryNode)) {
-				results.add(cpt.get(next));
+			String current = iterator.next();
+			if (current.contains(qn)) {
+				results.add(cpt.get(current));
 				continue;
 			}
 
-			stack.push(cpt.get(next));
+			temp.push(cpt.get(current));
 		}
 
-		while (!stack.isEmpty()) {
-			results.add(stack.pop());
+		while (!temp.isEmpty()) {
+			results.add(temp.pop());
 		}
 
-		System.out.println(df.format(Service.normalization(results)) + "," + Service.getComplexity());
-		return null;
+		return df.format(Service.normalization(results)) + "," + Service.getComplexity();
 	}
 }

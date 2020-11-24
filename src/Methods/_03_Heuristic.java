@@ -22,79 +22,78 @@ public class _03_Heuristic implements Probable {
 	public String inference(String query) {
 		DecimalFormat df = new DecimalFormat("0.00000");
 
+		// Reset the number of additions and multiplications
+		Service.reset();
+
 		// The hidden nodes of the given query
 		List<Node> hidden = Extract.hiddenNodes(query);
 
 		if (hidden.isEmpty()) {
-			System.out.println(df.format(Service.calculateProbability(query)) + "," + Service.getComplexity());
-			return null;
+			return df.format(Service.calculateProbability(query)) + "," + Service.getComplexity();
 		}
+
+		// Choose the node with the fewest dependant nodes
+		Collections.sort(hidden);
 
 		Queue<Cpt> minHeap = new PriorityQueue<>();
 
-		// Eliminate in alphabetical order
-		Collections.sort(hidden);
-
-		// The factors of the nodes
+		// The initial factors
 		Stack<Cpt> factors = Service.getFactors(query);
 
-		while (!hidden.isEmpty()) {
-			Node node = hidden.remove(0);
-			Stack<Cpt> stack = new Stack<>();
+		while (!hidden.isEmpty()) /* Join and eliminate the factors of the hidden nodes */ {
+			Node current = hidden.remove(0);
+			Stack<Cpt> temp = new Stack<>();
 
 			while (!factors.isEmpty()) {
-				stack.push(factors.pop());
-				Iterator<String> iterator = stack.peek().iterator();
+				temp.push(factors.pop());
+				Iterator<String> iterator = temp.peek().iterator();
 
 				while (iterator.hasNext()) {
-					if (iterator.next().contains(node.getName())) {
-						minHeap.add(stack.pop());
+					if (iterator.next().contains(current.getName())) {
+						minHeap.add(temp.pop());
 						break;
 					}
 				}
 			}
 
-			factors = stack;
+			factors = temp;
 
 			// Join
 			minHeap = Service.mulFactors(minHeap);
 
 			// Eliminate
-			minHeap.add(Service.eliminateFactor(minHeap.remove(), node));
+			minHeap.add(Service.eliminateFactor(minHeap.remove(), current));
 		}
 
-		while (!factors.isEmpty()) {
+		while (!factors.isEmpty()) /* Join the remaining factors */ {
 			minHeap.add(factors.pop());
 			minHeap = Service.mulFactors(minHeap);
 		}
 
-		String queryNode = Extract.QN(query);
+		Cpt cpt = minHeap.remove();
+		Iterator<String> iterator = cpt.iterator();
 
-		Stack<Double> stack = new Stack<>();
+		// The query node
+		String qn = Extract.QN(query);
 
-		// The probabilities of the queries in the samples set
-		Queue<Double> probabilities = new LinkedList<>();
+		// The results of the queries in the cpt
+		Queue<Double> results = new LinkedList<>();
+		Stack<Double> temp = new Stack<>();
 
-		while (!minHeap.isEmpty()) {
-			Cpt cpt = minHeap.remove();
-			Iterator<String> iterator = cpt.iterator();
-
-			while (iterator.hasNext()) {
-				String next = iterator.next();
-				if (next.contains(queryNode)) {
-					probabilities.add(cpt.get(next));
-					continue;
-				}
-
-				stack.push(cpt.get(next));
+		while (iterator.hasNext()) {
+			String current = iterator.next();
+			if (current.contains(qn)) {
+				results.add(cpt.get(current));
+				continue;
 			}
+
+			temp.push(cpt.get(current));
 		}
 
-		while (!stack.isEmpty()) {
-			probabilities.add(stack.pop());
+		while (!temp.isEmpty()) {
+			results.add(temp.pop());
 		}
 
-		System.out.println(df.format(Service.normalization(probabilities)) + "," + Service.getComplexity());
-		return null;
+		return df.format(Service.normalization(results)) + "," + Service.getComplexity();
 	}
 }

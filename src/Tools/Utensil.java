@@ -20,7 +20,7 @@ public class Utensil {
 	/**
 	 * This method breaks up the given query calculations into distinct parts.
 	 */
-	protected static Stack<Map<String, String>> completeProbabilityFormula(String query) {
+	protected static Queue<Map<String, String>> completeProbabilityFormula(String query) {
 		List<Node> hidden = Extract.hiddenNodes(query);
 
 		Queue<Queue<String>> cartesian = cartesianProduct(new ArrayList<>(hidden));
@@ -31,7 +31,7 @@ public class Utensil {
 		Map<String, String> nonhidden = Extract.nonHiddenNodes(query);
 
 		// The distinct parts of the given query
-		Stack<Map<String, String>> cpf = new Stack<>();
+		Queue<Map<String, String>> cpf = new LinkedList<>();
 
 		while (!cartesian.isEmpty()) {
 			Iterator<Node> iterator = hidden.iterator();
@@ -42,7 +42,7 @@ public class Utensil {
 				dp.put(iterator.next().getName(), values.remove());
 			}
 
-			cpf.push(dp);
+			cpf.add(dp);
 		}
 
 		return cpf;
@@ -56,16 +56,16 @@ public class Utensil {
 		String value = Extract.QV(query);
 
 		// The complementary queries
-		Stack<String> ce = new Stack<>();
+		Stack<String> cq = new Stack<>();
 
 		while (iterator.hasNext()) {
 			String candidate = iterator.next();
 			if (!candidate.equals(value)) {
-				ce.push(query.replaceFirst(value, candidate));
+				cq.push(query.replaceFirst(value, candidate));
 			}
 		}
 
-		return ce;
+		return cq;
 	}
 
 	/**
@@ -106,12 +106,12 @@ public class Utensil {
 		}
 
 		hidden.remove(0);
-		while (!hidden.isEmpty()) /* Generate all possible N tuples */ {
+		while (!hidden.isEmpty()) /* Generate all possible n tuples */ {
 			Queue<Queue<String>> temp = new LinkedList<>();
-			Node node = hidden.remove(0);
+			Node current = hidden.remove(0);
 
 			while (!cartesian.isEmpty()) {
-				Iterator<String> iterator = node.valuesIterator();
+				Iterator<String> iterator = current.valuesIterator();
 				Queue<String> values = cartesian.remove();
 
 				while (iterator.hasNext()) {

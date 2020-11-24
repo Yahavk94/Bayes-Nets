@@ -47,19 +47,14 @@ public class Cpt implements Comparable<Cpt> {
 	}
 
 	/**
-	 * This method returns the number of mappings in this cpt.
-	 */
-	public int size() {
-		return table.keySet().size();
-	}
-
-	/**
 	 * For sorting purpose.
 	 */
 	@Override
 	public int compareTo(Cpt cpt) {
 		if (table.size() == cpt.table.size()) {
-			return 1;
+			if (Extract.asciiSum(iterator().next()) > Extract.asciiSum(cpt.iterator().next())) {
+				return 1;
+			}
 		}
 
 		else if (table.size() > cpt.table.size()) {

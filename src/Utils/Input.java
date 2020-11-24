@@ -17,6 +17,9 @@ public class Input {
 	public static List<String> queries = readLines();
 	public static List<String> nodes = initNodes();
 
+	/**
+	 * This method reads all the lines from the input file.
+	 */
 	private static List<String> readLines() {
 		try {
 			return Files.readAllLines(Paths.get("input.txt"));
@@ -29,6 +32,9 @@ public class Input {
 		return null;
 	}
 
+	/**
+	 * This method returns the nodes.
+	 */
 	private static List<String> initNodes() throws RuntimeException {
 		List<String> nodes = new LinkedList<>();
 		queries.remove(0);
@@ -71,9 +77,9 @@ public class Input {
 		// The query
 		String temp = query.substring(2, query.lastIndexOf(",") - 1);
 
+		StringTokenizer st = new StringTokenizer(temp.substring(temp.indexOf("|") + 1), ",");
 		Set<String> set = new HashSet<>();
 
-		StringTokenizer st = new StringTokenizer(temp.substring(temp.indexOf("|") + 1), ",");
 		while (st.hasMoreTokens()) {
 			set.add(st.nextToken());
 		}

@@ -22,11 +22,16 @@ public class Service {
 	private static int muls;
 
 	/**
+	 * This method resets the number of additions and multiplications.
+	 */
+	public static void reset() {
+		adds = muls = 0;
+	}
+
+	/**
 	 * This method returns the sample set associated with the given query.
 	 */
 	public static Stack<String> getSamples(String query) {
-		adds = muls = 0;
-
 		Stack<String> samples = Utensil.getComplementaryQueries(query);
 		samples.push(query);
 		return samples;
@@ -44,9 +49,9 @@ public class Service {
 
 		double probability = 0;
 
-		Stack<String> ce = Utensil.getComplementaryQueries(query);
-		while (!ce.isEmpty()) {
-			probability += node.getCpt().get(ce.pop());
+		Stack<String> cq = Utensil.getComplementaryQueries(query);
+		while (!cq.isEmpty()) {
+			probability += node.getCpt().get(cq.pop());
 		}
 
 		return 1 - probability;
@@ -70,8 +75,8 @@ public class Service {
 	/**
 	 * This method returns the given query as a BN formula.
 	 */
-	public static Queue<Stack<String>> getBNFormula(String query) {
-		Stack<Map<String, String>> cpf = Utensil.completeProbabilityFormula(query);
+	public static Queue<Queue<String>> getBNFormula(String query) {
+		Queue<Map<String, String>> cpf = Utensil.completeProbabilityFormula(query);
 		if (cpf == null) /* The formula cannot be created */ {
 			return null;
 		}
@@ -79,20 +84,20 @@ public class Service {
 		adds += cpf.size() - 1;
 
 		// The distinct parts of the formula
-		Queue<Stack<String>> formula = new LinkedList<>();
+		Queue<Queue<String>> formula = new LinkedList<>();
 
 		while (!cpf.isEmpty()) {
-			Stack<String> stack = new Stack<>();
+			Queue<String> queue = new LinkedList<>();
 
-			Map<String, String> map = cpf.pop();
+			Map<String, String> map = cpf.remove();
 			Iterator<String> mapIterator = map.keySet().iterator();
 
 			while (mapIterator.hasNext()) {
-				Node node = BN.getInstance().getNode(mapIterator.next());
-				Iterator<String> iterator = node.parentsIterator();
+				Node current = BN.getInstance().getNode(mapIterator.next());
+				Iterator<String> iterator = current.parentsIterator();
 
 				if (!iterator.hasNext()) {
-					stack.push(node.getName() + "=" + map.get(node.getName()));
+					queue.add(current.getName() + "=" + map.get(current.getName()));
 					continue;
 				}
 
@@ -103,24 +108,24 @@ public class Service {
 					set.add(parent + "=" + map.get(parent));
 				}
 
-				stack.push(node.getName() + "=" + map.get(node.getName()) + "|" + set);
+				queue.add(current.getName() + "=" + map.get(current.getName()) + "|" + set);
 			}
 
-			formula.add(stack);
-			muls += stack.size() - 1;
+			formula.add(queue);
+			muls += queue.size() - 1;
 		}
 
 		return formula;
 	}
 
 	/**
-	 * This method returns the factors of the nodes in the network.
+	 * This method returns the initial factors of the nodes in the network.
 	 */
 	public static Stack<Cpt> getFactors(String query) {
 		Iterator<Node> iterator = BN.getInstance().iterator();
 		Map<String, String> evidence = Extract.evidenceNodes(query);
 
-		// The factors of the nodes
+		// The initial factors
 		Stack<Cpt> factors = new Stack<>();
 
 		while (iterator.hasNext()) {
@@ -222,35 +227,35 @@ public class Service {
 	}
 
 	/**
-	 * This method eliminates the given factor.
+	 * This method eliminates the given factor from the cpt.
 	 */
-	public static Cpt eliminateFactor(Cpt top, Node node) {
+	public static Cpt eliminateFactor(Cpt top, Node current) {
 		Iterator<String> iterator = top.iterator();
 
 		Cpt cpt = new Cpt();
 
 		while (iterator.hasNext()) {
-			String value = node.valuesIterator().next();
+			String chosen = current.valuesIterator().next();
 
-			String current = iterator.next();
-			Set<String> set = Extract.ordered(current);
+			String value = iterator.next();
+			Set<String> set = Extract.ordered(value);
 
 			double probability = top.get(set.toString());
 
-			if (current.contains(node.getName() + "=" + value)) {
-				Iterator<String> valuesIterator = node.valuesIterator();
+			if (value.contains(current.getName() + "=" + chosen)) {
+				Iterator<String> valuesIterator = current.valuesIterator();
 
 				while (valuesIterator.hasNext()) {
 					String candidate = valuesIterator.next();
 
-					if (!candidate.equals(value)) {
-						String temp = current.replace(node.getName() + "=" + value, node.getName() + "=" + candidate);
+					if (!candidate.equals(chosen)) {
+						String temp = value.replace(current.getName() + "=" + chosen, current.getName() + "=" + candidate);
 						probability += top.get(Extract.ordered(temp).toString());
 						adds += 1;
 					}
 				}
 
-				set.remove(node.getName() + "=" + value);
+				set.remove(current.getName() + "=" + chosen);
 				cpt.put(set.toString(), probability);
 			}
 		}
