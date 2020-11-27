@@ -5,6 +5,6 @@ package Methods;
  * @author Yahav Karpel
  */
 
-public interface Probable {
+public interface Inferable {
 	public String inference(String query);
 }

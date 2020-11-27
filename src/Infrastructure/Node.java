@@ -14,6 +14,7 @@ public class Node implements Comparable<Node> {
 
 	private Set<String> values = new HashSet<>();
 	private Set<String> parents = new HashSet<>();
+	private Set<String> ancestors = new HashSet<>();
 
 	private Cpt cpt = new Cpt();
 
@@ -39,7 +40,7 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * This method appends the specified value to the end of this values list.
+	 * This method adds the specified value to this values set if it is not already present.
 	 */
 	protected void insertValue(String value) {
 		values.add(value);
@@ -53,10 +54,31 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * This method appends the specified parent to the end of this parents list.
+	 * This method adds the specified parent to this parents set if it is not already present.
 	 */
 	protected void insertParent(String parent) {
 		parents.add(parent);
+	}
+
+	/**
+	 * This method returns an iterator over the ancestors of this node.
+	 */
+	public Iterator<String> ancestorsIterator() {
+		return ancestors.iterator();
+	}
+
+	/**
+	 * This method adds the specified ancestor to this ancestors set if it is not already present.
+	 */
+	protected void insertAncestor(String ancestor) {
+		ancestors.add(ancestor);
+	}
+
+	/**
+	 * This method returns true if this set contains the specified ancestor.
+	 */
+	public boolean containsAncestor(String ancestor) {
+		return ancestors.contains(ancestor);
 	}
 
 	/**

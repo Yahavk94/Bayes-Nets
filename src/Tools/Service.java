@@ -3,6 +3,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -88,23 +89,22 @@ public class Service {
 
 		while (!cpf.isEmpty()) {
 			Queue<String> queue = new LinkedList<>();
-
 			Map<String, String> map = cpf.remove();
-			Iterator<String> mapIterator = map.keySet().iterator();
 
+			Iterator<String> mapIterator = map.keySet().iterator();
 			while (mapIterator.hasNext()) {
 				Node current = BN.getInstance().getNode(mapIterator.next());
-				Iterator<String> iterator = current.parentsIterator();
 
-				if (!iterator.hasNext()) {
+				Iterator<String> parentsIterator = current.parentsIterator();
+				if (!parentsIterator.hasNext()) {
 					queue.add(current.getName() + "=" + map.get(current.getName()));
 					continue;
 				}
 
 				Set<String> set = new HashSet<>();
 
-				while (iterator.hasNext()) {
-					String parent = iterator.next();
+				while (parentsIterator.hasNext()) {
+					String parent = parentsIterator.next();
 					set.add(parent + "=" + map.get(parent));
 				}
 
@@ -122,27 +122,31 @@ public class Service {
 	 * This method returns the initial factors of the nodes in the network.
 	 */
 	public static Stack<Cpt> getFactors(String query) {
-		Iterator<Node> iterator = BN.getInstance().iterator();
 		Map<String, String> evidence = Extract.evidenceNodes(query);
 
 		// The initial factors
 		Stack<Cpt> factors = new Stack<>();
 
-		while (iterator.hasNext()) {
-			Iterator<String> cptIterator = iterator.next().getCpt().iterator();
+		Iterator<Node> nodesIterator = BN.getInstance().iterator();
+		while (nodesIterator.hasNext()) {
+			Node current = nodesIterator.next();
+
+			if (Utensil.filter(query).contains(current.getName())) {
+				continue;
+			}
 
 			Cpt cpt = new Cpt();
 
+			Iterator<String> cptIterator = current.getCpt().iterator();
 			while (cptIterator.hasNext()) {
 				Stack<String> samples = getSamples(cptIterator.next());
 
 				while (!samples.isEmpty()) {
-					Iterator<String> mapIterator = evidence.keySet().iterator();
-
 					boolean indicator = false;
 					String sample = samples.pop();
 					Set<String> set = Extract.ordered(sample);
 
+					Iterator<String> mapIterator = evidence.keySet().iterator();
 					while (mapIterator.hasNext()) {
 						String X = mapIterator.next();
 
@@ -166,7 +170,6 @@ public class Service {
 
 					// Note that indicator = false
 					Iterator<String> setIterator = set.iterator();
-
 					while (setIterator.hasNext()) {
 						if (evidence.containsKey(Extract.QX(setIterator.next()))) {
 							indicator = true;
@@ -188,6 +191,17 @@ public class Service {
 		return factors;
 	}
 
+	public static List<Node> HNFilter(String query) {
+		List<Node> hidden = Extract.hiddenNodes(query);
+
+		Iterator<String> setIterator = Utensil.filter(query).iterator();
+		while (setIterator.hasNext()) {
+			hidden.remove(BN.getInstance().getNode(setIterator.next()));
+		}
+
+		return hidden;
+	}
+
 	/**
 	 * This method joins the given factors.
 	 */
@@ -195,27 +209,24 @@ public class Service {
 		Cpt min = minHeap.remove();
 
 		while (!minHeap.isEmpty()) {
-			Iterator<String> minIterator = min.iterator();
 			Cpt top = minHeap.remove();
-
 			Cpt cpt = new Cpt();
 
+			Iterator<String> minIterator = min.iterator();
 			while (minIterator.hasNext()) {
-				Iterator<String> topIterator = top.iterator();
 				Set<String> outer = Extract.ordered(minIterator.next());
 
+				Iterator<String> topIterator = top.iterator();
 				while (topIterator.hasNext()) {
 					Set<String> inner = Extract.ordered(topIterator.next());
 
-					if (Collections.disjoint(outer, inner)) {
-						continue;
+					if (!Collections.disjoint(outer, inner)) {
+						Set<String> union = new HashSet<>(outer);
+						union.addAll(inner);
+
+						cpt.put(union.toString(), min.get(outer.toString()) * top.get(inner.toString()));
+						muls += 1;
 					}
-
-					Set<String> set = new HashSet<>(outer);
-					set.addAll(inner);
-
-					cpt.put(set.toString(), min.get(outer.toString()) * top.get(inner.toString()));
-					muls += 1;
 				}
 			}
 
@@ -229,35 +240,37 @@ public class Service {
 	/**
 	 * This method eliminates the given factor from the cpt.
 	 */
-	public static Cpt eliminateFactor(Cpt top, Node current) {
-		Iterator<String> iterator = top.iterator();
+	public static Cpt eliminateFactor(Cpt top, Node node) {
+		String chosen = node.valuesIterator().next();
 
 		Cpt cpt = new Cpt();
 
-		while (iterator.hasNext()) {
-			String chosen = current.valuesIterator().next();
+		Iterator<String> cptIterator = top.iterator();
+		while (cptIterator.hasNext()) {
+			String current = cptIterator.next();
 
-			String value = iterator.next();
-			Set<String> set = Extract.ordered(value);
+			if (!current.contains(node.getName() + "=" + chosen)) {
+				continue;
+			}
 
+			Set<String> set = Extract.ordered(current);
 			double probability = top.get(set.toString());
 
-			if (value.contains(current.getName() + "=" + chosen)) {
-				Iterator<String> valuesIterator = current.valuesIterator();
+			set.remove(node.getName() + "=" + chosen);
 
-				while (valuesIterator.hasNext()) {
-					String candidate = valuesIterator.next();
+			Iterator<String> valuesIterator = node.valuesIterator();
+			while (valuesIterator.hasNext()) {
+				String candidate = valuesIterator.next();
 
-					if (!candidate.equals(chosen)) {
-						String temp = value.replace(current.getName() + "=" + chosen, current.getName() + "=" + candidate);
-						probability += top.get(Extract.ordered(temp).toString());
-						adds += 1;
-					}
+				if (!candidate.equals(chosen)) {
+					Set<String> temp = new HashSet<>(set);
+					temp.add(node.getName() + "=" + candidate);
+					probability += top.get(temp.toString());
+					adds += 1;
 				}
-
-				set.remove(current.getName() + "=" + chosen);
-				cpt.put(set.toString(), probability);
 			}
+
+			cpt.put(set.toString(), probability);
 		}
 
 		return cpt;

@@ -13,11 +13,8 @@ import Utils.Input;
 
 public class Init {
 	protected static Map<String, Node> initFromFile(Map<String, Node> network) {
-		String input = Input.nodes.remove(0);
-
-		// Initialize the nodes in the network
-		StringTokenizer st = new StringTokenizer(input.substring(input.indexOf(" ") + 1), " ,");
-		while (st.hasMoreTokens()) {
+		StringTokenizer st = new StringTokenizer(Input.nodes.remove(0).substring(11), ",");
+		while (st.hasMoreTokens()) /* Initialize the nodes in the network */ {
 			Node node = new Node(st.nextToken());
 			network.put(node.getName(), node);
 		}
@@ -26,23 +23,27 @@ public class Init {
 		Input.nodes.remove(0);
 
 		while (!Input.nodes.isEmpty()) {
-			input = Input.nodes.remove(0);
-			Node current = network.get(input.substring(input.indexOf(" ") + 1));
+			Node current = network.get(Input.nodes.remove(0).substring(4));
 
 			// Initialize the values of the current node
-			input = Input.nodes.remove(0);
-			st = new StringTokenizer(input.substring(input.indexOf(" ") + 1), " ,");
+			st = new StringTokenizer(Input.nodes.remove(0).substring(8), ",");
 			while (st.hasMoreTokens()) {
 				current.insertValue(st.nextToken());
 			}
 
 			// Initialize the parents of the current node
-			input = Input.nodes.remove(0);
-			st = new StringTokenizer(input.substring(input.indexOf(" ") + 1), " ,");
+			st = new StringTokenizer(Input.nodes.remove(0).substring(9), ",");
 			while (st.hasMoreTokens()) {
 				String token = st.nextToken();
 				if (!token.equals("none")) {
 					current.insertParent(token);
+
+					Iterator<String> ancestorsIterator = network.get(token).ancestorsIterator();
+					while (ancestorsIterator.hasNext()) {
+						current.insertAncestor(ancestorsIterator.next());
+					}
+
+					current.insertAncestor(token);
 				}
 			}
 
@@ -58,11 +59,11 @@ public class Init {
 				continue;
 			}
 
-			st = new StringTokenizer(Input.nodes.remove(0), " ,");
+			st = new StringTokenizer(Input.nodes.remove(0), ",");
 			while (st.hasMoreTokens()) {
-				Iterator<String> iterator = current.parentsIterator();
 				Set<String> set = new HashSet<>();
 
+				Iterator<String> iterator = current.parentsIterator();
 				while (iterator.hasNext()) {
 					set.add(iterator.next() + "=" + st.nextToken());
 				}
@@ -71,7 +72,7 @@ public class Init {
 					current.getCpt().put(current.getName() + st.nextToken() + "|" + set, Double.parseDouble(st.nextToken()));
 				}
 
-				st = new StringTokenizer(Input.nodes.remove(0), " ,");
+				st = new StringTokenizer(Input.nodes.remove(0), ",");
 			}
 		}
 

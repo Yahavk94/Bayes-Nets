@@ -12,11 +12,11 @@ import Utils.Cpt;
 import Utils.Extract;
 
 /**
- * This class implements Variable Elimination algorithm.
+ * This class implements VE algorithm.
  * @author Yahav Karpel
  */
 
-public class _02_VE implements Probable {
+public class _02_VE implements Eliminable {
 	@Override
 	public String inference(String query) {
 		DecimalFormat df = new DecimalFormat("0.00000");
@@ -31,6 +31,11 @@ public class _02_VE implements Probable {
 			return df.format(Service.calculateProbability(query)) + "," + Service.getComplexity();
 		}
 
+		hidden = Service.HNFilter(query);
+
+		// The elimination order
+		order(hidden);
+
 		Queue<Cpt> minHeap = new PriorityQueue<>();
 
 		// The initial factors
@@ -42,10 +47,10 @@ public class _02_VE implements Probable {
 
 			while (!factors.isEmpty()) {
 				temp.push(factors.pop());
-				Iterator<String> iterator = temp.peek().iterator();
 
-				while (iterator.hasNext()) {
-					if (iterator.next().contains(current.getName())) {
+				Iterator<String> cptIterator = temp.peek().iterator();
+				while (cptIterator.hasNext()) {
+					if (cptIterator.next().contains(current.getName())) {
 						minHeap.add(temp.pop());
 						break;
 					}
@@ -67,7 +72,6 @@ public class _02_VE implements Probable {
 		}
 
 		Cpt cpt = minHeap.remove();
-		Iterator<String> iterator = cpt.iterator();
 
 		// The query node
 		String qn = Extract.QN(query);
@@ -76,8 +80,9 @@ public class _02_VE implements Probable {
 		Queue<Double> results = new LinkedList<>();
 		Stack<Double> temp = new Stack<>();
 
-		while (iterator.hasNext()) {
-			String current = iterator.next();
+		Iterator<String> cptIterator = cpt.iterator();
+		while (cptIterator.hasNext()) {
+			String current = cptIterator.next();
 			if (current.contains(qn)) {
 				results.add(cpt.get(current));
 				continue;
@@ -91,5 +96,10 @@ public class _02_VE implements Probable {
 		}
 
 		return df.format(Service.normalization(results)) + "," + Service.getComplexity();
+	}
+
+	@Override
+	public void order(List<Node> hidden) {
+		return;
 	}
 }

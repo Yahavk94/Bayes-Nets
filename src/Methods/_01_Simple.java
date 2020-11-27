@@ -10,7 +10,7 @@ import Tools.Service;
  * @author Yahav Karpel
  */
 
-public class _01_Simple implements Probable {
+public class _01_Simple implements Inferable {
 	@Override
 	public String inference(String query) {
 		DecimalFormat df = new DecimalFormat("0.00000");
@@ -37,9 +37,9 @@ public class _01_Simple implements Probable {
 			double result = 0;
 
 			while (!formula.isEmpty()) /* Calculate the probability of each part in the formula */ {
-				Queue<String> queue = formula.remove();
 				double probability = 1;
 
+				Queue<String> queue = formula.remove();
 				while (!queue.isEmpty()) {
 					probability = probability * Service.calculateProbability(queue.remove());
 				}

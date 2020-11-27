@@ -30,7 +30,7 @@ public class Extract {
 	}
 
 	/**
-	 * This method returns the query node.
+	 * This method extracts the query node out of the given query.
 	 */
 	public static String QN(String query) {
 		if (!query.contains("|")) {
@@ -62,11 +62,10 @@ public class Extract {
 	 * This method returns the hidden nodes of the given query.
 	 */
 	public static List<Node> hiddenNodes(String query) {
-		Iterator<Node> iterator = BN.getInstance().iterator();
-
 		List<Node> hidden = new ArrayList<>();
 		Map<String, String> nonhidden = nonHiddenNodes(query);
 
+		Iterator<Node> iterator = BN.getInstance().iterator();
 		while (iterator.hasNext()) {
 			Node node = iterator.next();
 			if (!nonhidden.containsKey(node.getName())) {
@@ -78,7 +77,7 @@ public class Extract {
 	}
 
 	/**
-	 * This method returns the non hidden nodes of the given query.
+	 * This method returns the nonhidden nodes of the given query.
 	 */
 	public static Map<String, String> nonHiddenNodes(String query) {
 		Map<String, String> nonhidden = evidenceNodes(query);
@@ -97,13 +96,15 @@ public class Extract {
 		return set;
 	}
 
+	/**
+	 * This method calculates and returns the ascii sum of the nodes of the given query.
+	 */
 	public static int asciiSum(String query) {
-		Iterator<String> iterator = ordered(query).iterator();
-
 		int ascii = 0;
+
+		Iterator<String> iterator = ordered(query).iterator();
 		while (iterator.hasNext()) {
 			String X = QX(iterator.next());
-
 			while (!X.isEmpty()) {
 				ascii += (int)X.charAt(0);
 				X = X.substring(1);

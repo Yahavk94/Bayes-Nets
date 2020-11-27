@@ -1,11 +1,13 @@
 package Tools;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
 import Infrastructure.BN;
 import Infrastructure.Node;
@@ -34,12 +36,12 @@ public class Utensil {
 		Queue<Map<String, String>> cpf = new LinkedList<>();
 
 		while (!cartesian.isEmpty()) {
-			Iterator<Node> iterator = hidden.iterator();
 			Queue<String> values = cartesian.remove();
 			Map<String, String> dp = new HashMap<>(nonhidden);
 
-			while (iterator.hasNext()) {
-				dp.put(iterator.next().getName(), values.remove());
+			Iterator<Node> nodesIterator = hidden.iterator();
+			while (nodesIterator.hasNext()) {
+				dp.put(nodesIterator.next().getName(), values.remove());
 			}
 
 			cpf.add(dp);
@@ -48,18 +50,49 @@ public class Utensil {
 		return cpf;
 	}
 
+	public static Set<String> filter(String query) {
+		Map<String, String> nonhidden = Extract.nonHiddenNodes(query);
+
+		Set<String> set = new HashSet<>();
+
+		Iterator<Node> nodesIterator = BN.getInstance().iterator();
+		while (nodesIterator.hasNext()) {
+			Node node = nodesIterator.next();
+
+			if (nonhidden.containsKey(node.getName())) {
+				continue;
+			}
+
+			boolean indicator = false;
+
+			Iterator<String> iterator = nonhidden.keySet().iterator();
+			while (iterator.hasNext()) {
+				if (BN.getInstance().getNode(iterator.next()).containsAncestor(node.getName())) {
+					indicator = true;
+					break;
+				}
+			}
+
+			if (!indicator) {
+				set.add(node.getName());
+			}
+		}
+
+		return set;
+	}
+
 	/**
 	 * This method returns the complementary queries of the given query.
 	 */
 	protected static Stack<String> getComplementaryQueries(String query) {
-		Iterator<String> iterator = BN.getInstance().getNode(Extract.QX(query)).valuesIterator();
 		String value = Extract.QV(query);
 
 		// The complementary queries
 		Stack<String> cq = new Stack<>();
 
-		while (iterator.hasNext()) {
-			String candidate = iterator.next();
+		Iterator<String> nodesIterator = BN.getInstance().getNode(Extract.QX(query)).valuesIterator();
+		while (nodesIterator.hasNext()) {
+			String candidate = nodesIterator.next();
 			if (!candidate.equals(value)) {
 				cq.push(query.replaceFirst(value, candidate));
 			}
@@ -79,11 +112,10 @@ public class Utensil {
 		Queue<Queue<String>> cartesian = new LinkedList<>();
 
 		if (hidden.size() == 1) {
-			Iterator<String> iterator = hidden.remove(0).valuesIterator();
-
-			while (iterator.hasNext()) {
+			Iterator<String> nodesIterator = hidden.remove(0).valuesIterator();
+			while (nodesIterator.hasNext()) {
 				Queue<String> queue = new LinkedList<>();
-				queue.add(iterator.next());
+				queue.add(nodesIterator.next());
 				cartesian.add(queue);
 			}
 
@@ -92,11 +124,10 @@ public class Utensil {
 
 		// Generate all possible pairs
 		Iterator<String> outer = hidden.remove(0).valuesIterator();
-
 		while (outer.hasNext()) {
-			Iterator<String> inner = hidden.get(0).valuesIterator();
 			String value = outer.next();
 
+			Iterator<String> inner = hidden.get(0).valuesIterator();
 			while (inner.hasNext()) {
 				Queue<String> queue = new LinkedList<>();
 				queue.add(value);
@@ -111,12 +142,12 @@ public class Utensil {
 			Node current = hidden.remove(0);
 
 			while (!cartesian.isEmpty()) {
-				Iterator<String> iterator = current.valuesIterator();
 				Queue<String> values = cartesian.remove();
 
-				while (iterator.hasNext()) {
+				Iterator<String> valuesIterator = current.valuesIterator();
+				while (valuesIterator.hasNext()) {
 					Queue<String> queue = new LinkedList<>(values);
-					queue.add(iterator.next());
+					queue.add(valuesIterator.next());
 					temp.add(queue);
 				}
 			}
