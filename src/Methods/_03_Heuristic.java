@@ -8,9 +8,9 @@ import Infrastructure.Node;
  * @author Yahav Karpel
  */
 
-public class _03_Heuristic extends _02_VE {
+public class _03_Heuristic extends _02_VE implements Sortable {
 	@Override
-	public void order(List<Node> hidden) {
-		Collections.sort(hidden);
+	public void sort(List<Node> HN) {
+		Collections.sort(HN);
 	}
 }

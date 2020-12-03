@@ -16,7 +16,7 @@ import Utils.Input;
 
 public class Execute {
 	public static void main(String[] args) throws IOException {
-		PrintWriter output = new PrintWriter(new FileWriter("output.txt"));
+		PrintWriter output = new PrintWriter(new FileWriter("Output.txt"));
 
 		Queue<String> queries = new LinkedList<>();
 		Queue<Integer> methods = new LinkedList<>();
@@ -24,7 +24,6 @@ public class Execute {
 		while (!Input.queries.isEmpty()) {
 			String query = Input.queries.remove(0);
 			int index = query.lastIndexOf(",");
-
 			queries.add(query.substring(0, index));
 			methods.add(Integer.parseInt(query.substring(index + 1)));
 		}

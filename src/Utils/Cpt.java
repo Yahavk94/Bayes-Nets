@@ -46,10 +46,6 @@ public class Cpt implements Comparable<Cpt> {
 		table.put(query, probability);
 	}
 
-	public String toString() {
-		return table.toString();
-	}
-
 	/**
 	 * For sorting purpose.
 	 */

@@ -1,9 +1,10 @@
 package Infrastructure;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import Utils.Input;
 
 /**
@@ -13,10 +14,19 @@ import Utils.Input;
 
 public class Init {
 	protected static Map<String, Node> initFromFile(Map<String, Node> network) {
+		Map<String, Node> temp = new TreeMap<>();
+
+		// Initialize the network nodes in lexicographic order
 		StringTokenizer st = new StringTokenizer(Input.nodes.remove(0).substring(11), ",");
-		while (st.hasMoreTokens()) /* Initialize the nodes in the network */ {
+		while (st.hasMoreTokens()) {
 			Node node = new Node(st.nextToken());
-			network.put(node.getName(), node);
+			temp.put(node.getName(), node);
+		}
+
+		Iterator<String> mapIterator = temp.keySet().iterator();
+		while (mapIterator.hasNext()) {
+			String name = mapIterator.next();
+			network.put(name, temp.get(name));
 		}
 
 		// Epsilon
@@ -38,12 +48,13 @@ public class Init {
 				if (!token.equals("none")) {
 					current.insertParent(token);
 
+					current.insertAncestor(token);
 					Iterator<String> ancestorsIterator = network.get(token).ancestorsIterator();
 					while (ancestorsIterator.hasNext()) {
 						current.insertAncestor(ancestorsIterator.next());
 					}
 
-					current.insertAncestor(token);
+					network.get(token).insertChild(current.getName());
 				}
 			}
 
@@ -61,7 +72,7 @@ public class Init {
 
 			st = new StringTokenizer(Input.nodes.remove(0), ",");
 			while (st.hasMoreTokens()) {
-				Set<String> set = new HashSet<>();
+				Set<String> set = new TreeSet<>();
 
 				Iterator<String> iterator = current.parentsIterator();
 				while (iterator.hasNext()) {

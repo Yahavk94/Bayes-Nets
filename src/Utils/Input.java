@@ -15,14 +15,14 @@ import java.util.StringTokenizer;
 
 public class Input {
 	public static List<String> queries = readLines();
-	public static List<String> nodes = initNodes();
+	public static List<String> nodes = nodesList();
 
 	/**
 	 * This method reads all the lines from the input file.
 	 */
 	private static List<String> readLines() {
 		try {
-			return Files.readAllLines(Paths.get("input.txt"));
+			return Files.readAllLines(Paths.get("Input.txt"));
 		}
 
 		catch (IOException e) {
@@ -33,15 +33,15 @@ public class Input {
 	}
 
 	/**
-	 * This method returns the nodes.
+	 * This method returns the nodes list.
 	 */
-	private static List<String> initNodes() throws RuntimeException {
+	private static List<String> nodesList() throws RuntimeException {
 		List<String> nodes = new LinkedList<>();
 		queries.remove(0);
 		for (int i = 0; i < queries.size(); i += 1) {
 			if (queries.get(i).equals("Queries")) {
 				queries.remove(i);
-				initQueries();
+				updateQueries();
 				return nodes;
 			}
 
@@ -56,7 +56,10 @@ public class Input {
 		throw new RuntimeException("ERROR");
 	}
 
-	private static void initQueries() {
+	/**
+	 * This method updates the queries list.
+	 */
+	private static void updateQueries() {
 		for (int i = 0; i < queries.size(); i += 1) {
 			if (queries.get(i).equals("")) {
 				queries.remove(i--);

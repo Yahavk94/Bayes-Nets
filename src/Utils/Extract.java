@@ -1,12 +1,12 @@
 package Utils;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 import Infrastructure.BN;
 import Infrastructure.Node;
 
@@ -44,49 +44,49 @@ public class Extract {
 	 * This method returns the evidence nodes of the given query.
 	 */
 	public static Map<String, String> evidenceNodes(String query) {
-		Map<String, String> nonhidden = new HashMap<>();
+		Map<String, String> evidence = new HashMap<>();
 
 		if (!query.contains("|")) {
-			return nonhidden;
+			return evidence;
 		}
 
 		StringTokenizer st = new StringTokenizer(query.substring(query.indexOf("|") + 1), "[]= ,");
 		while (st.hasMoreTokens()) {
-			nonhidden.put(st.nextToken(), st.nextToken());
+			evidence.put(st.nextToken(), st.nextToken());
 		}
 
-		return nonhidden;
+		return evidence;
 	}
 
 	/**
 	 * This method returns the hidden nodes of the given query.
 	 */
 	public static List<Node> hiddenNodes(String query) {
-		List<Node> hidden = new ArrayList<>();
-		Map<String, String> nonhidden = nonHiddenNodes(query);
+		List<Node> HN = new ArrayList<>();
+		Map<String, String> NHN = nonHiddenNodes(query);
 
 		Iterator<Node> iterator = BN.getInstance().iterator();
 		while (iterator.hasNext()) {
 			Node node = iterator.next();
-			if (!nonhidden.containsKey(node.getName())) {
-				hidden.add(node);
+			if (!NHN.containsKey(node.getName())) {
+				HN.add(node);
 			}
 		}
 
-		return hidden;
+		return HN;
 	}
 
 	/**
 	 * This method returns the nonhidden nodes of the given query.
 	 */
 	public static Map<String, String> nonHiddenNodes(String query) {
-		Map<String, String> nonhidden = evidenceNodes(query);
-		nonhidden.put(QX(query), QV(query));
-		return nonhidden;
+		Map<String, String> NHN = evidenceNodes(query);
+		NHN.put(QX(query), QV(query));
+		return NHN;
 	}
 
 	public static Set<String> ordered(String query) {
-		Set<String> set = new HashSet<>();
+		Set<String> set = new TreeSet<>();
 
 		StringTokenizer st = new StringTokenizer(query, "|[] ,");
 		while (st.hasMoreTokens()) {

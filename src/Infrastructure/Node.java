@@ -1,6 +1,7 @@
 package Infrastructure;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import Utils.Cpt;
 
@@ -12,11 +13,13 @@ import Utils.Cpt;
 public class Node implements Comparable<Node> {
 	private String name;
 
-	private Set<String> values = new HashSet<>();
-	private Set<String> parents = new HashSet<>();
-	private Set<String> ancestors = new HashSet<>();
+	private Set<String> values = new LinkedHashSet<>();
+	private Set<String> parents = new LinkedHashSet<>();
 
 	private Cpt cpt = new Cpt();
+
+	private Set<String> ancestors = new HashSet<>();
+	private Set<String> children = new HashSet<>();
 
 	/**
 	 * This method constructs a new node.
@@ -33,13 +36,6 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * This method returns an iterator over the values of this node.
-	 */
-	public Iterator<String> valuesIterator() {
-		return values.iterator();
-	}
-
-	/**
 	 * This method adds the specified value to this values set if it is not already present.
 	 */
 	protected void insertValue(String value) {
@@ -47,10 +43,10 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * This method returns an iterator over the parents of this node.
+	 * This method returns an iterator over the values of this node.
 	 */
-	public Iterator<String> parentsIterator() {
-		return parents.iterator();
+	public Iterator<String> valuesIterator() {
+		return values.iterator();
 	}
 
 	/**
@@ -61,10 +57,24 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
+	 * This method returns an iterator over the parents of this node.
+	 */
+	public Iterator<String> parentsIterator() {
+		return parents.iterator();
+	}
+
+	/**
 	 * This method returns an iterator over the ancestors of this node.
 	 */
 	public Iterator<String> ancestorsIterator() {
 		return ancestors.iterator();
+	}
+
+	/**
+	 * This method returns true if this set contains the specified ancestor.
+	 */
+	public boolean containsAncestor(String ancestor) {
+		return ancestors.contains(ancestor);
 	}
 
 	/**
@@ -75,10 +85,10 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * This method returns true if this set contains the specified ancestor.
+	 * This method adds the specified child to this children set if it is not already present.
 	 */
-	public boolean containsAncestor(String ancestor) {
-		return ancestors.contains(ancestor);
+	protected void insertChild(String child) {
+		children.add(child);
 	}
 
 	/**
@@ -93,7 +103,7 @@ public class Node implements Comparable<Node> {
 	 */
 	@Override
 	public int compareTo(Node node) {
-		if (parents.size() > node.parents.size()) {
+		if (children.size() + parents.size() > node.children.size() + node.parents.size()) {
 			return 1;
 		}
 

@@ -1,7 +1,7 @@
 package Methods;
 
 /**
- * This interface represents the probabilistic inference algorithms.
+ * This interface represents the probabilistic inference.
  * @author Yahav Karpel
  */
 
