@@ -63,16 +63,16 @@ public class Node implements Comparable<Node> {
 	 */
 	protected void insertParent(Node node) {
 		parents.add(node.name);
+		ancestors.add(node.name);
+		node.children.add(name);
 		update(node);
 	}
 
 	/**
-	 * This method updates the ancestors and the children of this node and its parent.
+	 * This method updates the ancestors set of this node.
 	 */
 	private void update(Node node) {
-		ancestors.add(node.name);
 		ancestors = Stream.concat(ancestors.stream(), node.ancestors.stream()).collect(Collectors.toSet());
-		node.children.add(name);
 	}
 
 	/**
@@ -101,14 +101,33 @@ public class Node implements Comparable<Node> {
 	 */
 	@Override
 	public int compareTo(Node node) {
-		if (children.size() + parents.size() == node.children.size() + node.parents.size()) {
+		if (minFill() == node.minFill()) {
 			return cpt.compareTo(node.cpt);
 		}
 
-		else if (children.size() + parents.size() > node.children.size() + node.parents.size()) {
+		else if (minFill() > node.minFill()) {
 			return 1;
 		}
 
 		return -1;
+	}
+
+	/**
+	 * This method calculates and returns the heuristic evaluation function.
+	 */
+	private int minFill() {
+		int heuristic = cpt.size();
+
+		Iterator<String> iterator = parents.iterator();
+		while (iterator.hasNext()) {
+			heuristic += BN.getInstance().getNode(iterator.next()).cpt.size();
+		}
+
+		iterator = children.iterator();
+		while (iterator.hasNext()) {
+			heuristic += BN.getInstance().getNode(iterator.next()).cpt.size();
+		}
+
+		return heuristic;
 	}
 }

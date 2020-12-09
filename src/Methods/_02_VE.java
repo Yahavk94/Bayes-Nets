@@ -31,10 +31,10 @@ public class _02_VE implements Sortable {
 		catch (Exception e) {
 			Queue<Cpt> minHeap = new PriorityQueue<>();
 
-			// The hidden nodes of the given query after filtering
+			// The hidden nodes of the given query after filtering out those unnecessary ones
 			List<Node> HN = Service.getFilteredHiddenNodes(query);
 
-			// The elimination order
+			// Impose a total ordering on the hidden nodes
 			sort(HN);
 
 			// The initial factors
@@ -66,12 +66,17 @@ public class _02_VE implements Sortable {
 				// Multiply the factors
 				minHeap.add(Service.mulFactors(minHeap));
 
-				try /* Remove the current hidden node */ {
-					minHeap.add(Service.removeFactor(minHeap.remove(), current));
+				// Remove the current hidden node
+				Cpt cpt = Service.removeFactor(minHeap.remove(), current);
+
+				if (cpt.size() < 2) /* A meaningless cpt */ {
+					continue;
 				}
 
-				catch (RuntimeException rte) {
-					continue;
+				if (cpt.size() == 2) {
+					factors.add(cpt);
+				} else {
+					minHeap.add(cpt);
 				}
 			}
 

@@ -77,7 +77,7 @@ public class Service {
 			Map<String, String> map = cpf.remove();
 			Queue<String> dp = new LinkedList<>();
 
-			// Create a distinct part of the BN formula
+			// Create the current distinct part of the BN formula
 			Iterator<String> mapIterator = map.keySet().iterator();
 			while (mapIterator.hasNext()) {
 				Node current = BN.getInstance().getNode(mapIterator.next());
@@ -136,7 +136,7 @@ public class Service {
 		while (nodesIterator.hasNext()) {
 			Node current = nodesIterator.next();
 
-			if (unnecessaryHN.contains(current.getName())) /* Filter out the factors of the unnecessary hidden nodes */ {
+			if (unnecessaryHN.contains(current.getName())) /* Filter out the unnecessary factors */ {
 				continue;
 			}
 
@@ -238,7 +238,7 @@ public class Service {
 	/**
 	 * This method removes the given factor from the cpt.
 	 */
-	public static Cpt removeFactor(Cpt top, Node node) throws RuntimeException {
+	public static Cpt removeFactor(Cpt top, Node node) {
 		Cpt cpt = new Cpt();
 
 		// A random value from the values set
@@ -283,11 +283,7 @@ public class Service {
 			cpt.put(newQuery.toString(), probability);
 		}
 
-		if (cpt.size() > 1) {
-			return cpt;
-		}
-
-		throw new RuntimeException("ERROR");
+		return cpt;
 	}
 
 	/**
