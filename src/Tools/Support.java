@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.Stack;
 import java.util.TreeSet;
 import Infrastructure.BN;
@@ -25,8 +26,8 @@ public class Support {
 	protected static Queue<Map<String, String>> completeProbabilityFormula(String query) {
 		Queue<Map<String, String>> cpf = new LinkedList<>();
 
-		List<Node> HN = Extract.hiddenNodes(query);
-		Map<String, String> NHN = Extract.nonHiddenNodes(query);
+		List<Node> HN = getHiddenNodes(query);
+		Map<String, String> NHN = getNonHiddenNodes(query);
 
 		if (HN.isEmpty()) /* The formula consists of one part */ {
 			cpf.add(NHN);
@@ -39,9 +40,9 @@ public class Support {
 			Queue<String> values = cartesian.remove();
 			Map<String, String> dp = new HashMap<>(NHN);
 
-			Iterator<Node> HNIterator = HN.iterator();
-			while (HNIterator.hasNext()) {
-				dp.put(HNIterator.next().getName(), values.remove());
+			Iterator<Node> iterator = HN.iterator();
+			while (iterator.hasNext()) {
+				dp.put(iterator.next().getName(), values.remove());
 			}
 
 			cpf.add(dp);
@@ -53,16 +54,16 @@ public class Support {
 	/**
 	 * This method returns the unnecessary hidden nodes.
 	 */
-	protected static Set<String> HNFilter(String query) {
-		Map<String, String> NHN = Extract.nonHiddenNodes(query);
+	protected static Set<String> getUnnecessaryHiddenNodes(String query) {
+		SortedSet<String> unnecessaryHN = new TreeSet<>();
 
-		Set<String> set = new TreeSet<>();
+		Map<String, String> NHN = getNonHiddenNodes(query);
 
 		Iterator<Node> nodesIterator = BN.getInstance().iterator();
 		while (nodesIterator.hasNext()) {
 			Node node = nodesIterator.next();
 
-			if (NHN.containsKey(node.getName())) {
+			if (NHN.containsKey(node.getName())) /* Necessary */ {
 				continue;
 			}
 
@@ -70,18 +71,18 @@ public class Support {
 
 			Iterator<String> NHNIterator = NHN.keySet().iterator();
 			while (NHNIterator.hasNext()) {
-				if (BN.getInstance().getNode(NHNIterator.next()).containsAncestor(node.getName())) {
+				if (BN.getInstance().getNode(NHNIterator.next()).containsAncestor(node.getName())) /* Necessary */ {
 					indicator = true;
 					break;
 				}
 			}
 
 			if (!indicator) {
-				set.add(node.getName());
+				unnecessaryHN.add(node.getName());
 			}
 		}
 
-		return set;
+		return unnecessaryHN;
 	}
 
 	/**
@@ -92,9 +93,9 @@ public class Support {
 
 		String value = Extract.QV(query);
 
-		Iterator<String> nodesIterator = BN.getInstance().getNode(Extract.QX(query)).valuesIterator();
-		while (nodesIterator.hasNext()) {
-			String candidate = nodesIterator.next();
+		Iterator<String> iterator = BN.getInstance().getNode(Extract.QX(query)).valuesIterator();
+		while (iterator.hasNext()) {
+			String candidate = iterator.next();
 			if (!candidate.equals(value)) {
 				cq.push(query.replaceFirst(value, candidate));
 			}
@@ -110,10 +111,10 @@ public class Support {
 		Queue<Queue<String>> cartesian = new LinkedList<>();
 
 		if (HN.size() == 1) {
-			Iterator<String> HNIterator = HN.remove(0).valuesIterator();
-			while (HNIterator.hasNext()) {
+			Iterator<String> iterator = HN.remove(0).valuesIterator();
+			while (iterator.hasNext()) {
 				Queue<String> queue = new LinkedList<>();
-				queue.add(HNIterator.next());
+				queue.add(iterator.next());
 				cartesian.add(queue);
 			}
 
@@ -143,10 +144,10 @@ public class Support {
 			while (!cartesian.isEmpty()) {
 				Queue<String> values = cartesian.remove();
 
-				Iterator<String> valuesIterator = current.valuesIterator();
-				while (valuesIterator.hasNext()) {
+				Iterator<String> iterator = current.valuesIterator();
+				while (iterator.hasNext()) {
 					Queue<String> queue = new LinkedList<>(values);
-					queue.add(valuesIterator.next());
+					queue.add(iterator.next());
 					temp.add(queue);
 				}
 			}
@@ -155,5 +156,32 @@ public class Support {
 		}
 
 		return cartesian;
+	}
+
+	/**
+	 * This method returns the hidden nodes of the given query.
+	 */
+	protected static List<Node> getHiddenNodes(String query) {
+		List<Node> HN = new ArrayList<>();
+		Map<String, String> NHN = getNonHiddenNodes(query);
+
+		Iterator<Node> iterator = BN.getInstance().iterator();
+		while (iterator.hasNext()) {
+			Node node = iterator.next();
+			if (!NHN.containsKey(node.getName())) {
+				HN.add(node);
+			}
+		}
+
+		return HN;
+	}
+
+	/**
+	 * This method returns the nonhidden nodes of the given query.
+	 */
+	private static Map<String, String> getNonHiddenNodes(String query) {
+		Map<String, String> NHN = Extract.getEvidenceNodes(query);
+		NHN.put(Extract.QX(query), Extract.QV(query));
+		return NHN;
 	}
 }

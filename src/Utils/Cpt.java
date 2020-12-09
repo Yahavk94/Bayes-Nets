@@ -47,6 +47,13 @@ public class Cpt implements Comparable<Cpt> {
 	}
 
 	/**
+	 * This method returns the number of mappings in this map.
+	 */
+	public int size() {
+		return table.size();
+	}
+
+	/**
 	 * For sorting purpose.
 	 */
 	@Override

@@ -3,6 +3,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import Utils.Cpt;
 
 /**
@@ -13,7 +15,7 @@ import Utils.Cpt;
 public class Node implements Comparable<Node> {
 	private String name;
 
-	private Set<String> values = new LinkedHashSet<>();
+	private Set<String> values = new HashSet<>();
 	private Set<String> parents = new LinkedHashSet<>();
 
 	private Cpt cpt = new Cpt();
@@ -36,6 +38,13 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
+	 * This method returns a random value from this values set.
+	 */
+	public String getRandomValue() {
+		return values.iterator().next();
+	}
+
+	/**
 	 * This method adds the specified value to this values set if it is not already present.
 	 */
 	protected void insertValue(String value) {
@@ -50,10 +59,20 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * This method adds the specified parent to this parents set if it is not already present.
+	 * This method adds the specified node to this parents set if it is not already present.
 	 */
-	protected void insertParent(String parent) {
-		parents.add(parent);
+	protected void insertParent(Node node) {
+		parents.add(node.name);
+		update(node);
+	}
+
+	/**
+	 * This method updates the ancestors and the children of this node and its parent.
+	 */
+	private void update(Node node) {
+		ancestors.add(node.name);
+		ancestors = Stream.concat(ancestors.stream(), node.ancestors.stream()).collect(Collectors.toSet());
+		node.children.add(name);
 	}
 
 	/**
@@ -64,10 +83,10 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * This method returns an iterator over the ancestors of this node.
+	 * This method returns the conditional probability table of this node.
 	 */
-	public Iterator<String> ancestorsIterator() {
-		return ancestors.iterator();
+	public Cpt getCpt() {
+		return cpt;
 	}
 
 	/**
@@ -78,32 +97,15 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * This method adds the specified ancestor to this ancestors set if it is not already present.
-	 */
-	protected void insertAncestor(String ancestor) {
-		ancestors.add(ancestor);
-	}
-
-	/**
-	 * This method adds the specified child to this children set if it is not already present.
-	 */
-	protected void insertChild(String child) {
-		children.add(child);
-	}
-
-	/**
-	 * This method returns the conditional probability table of this node.
-	 */
-	public Cpt getCpt() {
-		return cpt;
-	}
-
-	/**
 	 * For sorting purpose.
 	 */
 	@Override
 	public int compareTo(Node node) {
-		if (children.size() + parents.size() > node.children.size() + node.parents.size()) {
+		if (children.size() + parents.size() == node.children.size() + node.parents.size()) {
+			return cpt.compareTo(node.cpt);
+		}
+
+		else if (children.size() + parents.size() > node.children.size() + node.parents.size()) {
 			return 1;
 		}
 

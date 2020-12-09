@@ -7,6 +7,6 @@ import Infrastructure.Node;
  * @author Yahav Karpel
  */
 
-public interface Sortable {
+public interface Sortable extends Inferable {
 	public void sort(List<Node> HN);
 }

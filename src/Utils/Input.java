@@ -2,11 +2,11 @@ package Utils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+import java.util.SortedSet;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 /**
  * This class represents the input file.
@@ -77,16 +77,15 @@ public class Input {
 			return query;
 		}
 
-		// The query
-		String temp = query.substring(2, query.lastIndexOf(",") - 1);
+		SortedSet<String> evidence = new TreeSet<>();
 
+		String temp = query.substring(2, query.lastIndexOf(",") - 1);
 		StringTokenizer st = new StringTokenizer(temp.substring(temp.indexOf("|") + 1), ",");
-		Set<String> set = new HashSet<>();
 
 		while (st.hasMoreTokens()) {
-			set.add(st.nextToken());
+			evidence.add(st.nextToken());
 		}
 
-		return temp.substring(0, temp.indexOf("|") + 1) + set + query.substring(query.lastIndexOf(","));
+		return temp.substring(0, temp.indexOf("|") + 1) + evidence + query.substring(query.lastIndexOf(","));
 	}
 }

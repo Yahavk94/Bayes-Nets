@@ -16,7 +16,7 @@ import Utils.Extract;
  * @author Yahav Karpel
  */
 
-public class _02_VE extends _01_Simple implements Sortable {
+public class _02_VE implements Sortable {
 	@Override
 	public String inference(String query) {
 		DecimalFormat df = new DecimalFormat("0.00000");
@@ -31,8 +31,8 @@ public class _02_VE extends _01_Simple implements Sortable {
 		catch (Exception e) {
 			Queue<Cpt> minHeap = new PriorityQueue<>();
 
-			// The filtered hidden nodes of the given query
-			List<Node> HN = Service.getFHN(query);
+			// The hidden nodes of the given query after filtering
+			List<Node> HN = Service.getFilteredHiddenNodes(query);
 
 			// The elimination order
 			sort(HN);
@@ -40,9 +40,10 @@ public class _02_VE extends _01_Simple implements Sortable {
 			// The initial factors
 			Stack<Cpt> factors = Service.getFactors(query);
 
-			while (!HN.isEmpty()) /* Join and eliminate the factors of the hidden nodes */ {
+			while (!HN.isEmpty()) {
 				Node current = HN.remove(0);
 
+				// Associate the specified factors with the specified hidden node
 				Stack<Cpt> temp = new Stack<>();
 				while (!factors.isEmpty()) {
 					temp.push(factors.pop());
@@ -58,16 +59,25 @@ public class _02_VE extends _01_Simple implements Sortable {
 
 				factors = temp;
 
-				// Join
-				minHeap = Service.mulFactors(minHeap);
+				if (minHeap.isEmpty()) {
+					continue;
+				}
 
-				// Eliminate
-				minHeap.add(Service.removeFactor(minHeap.remove(), current));
+				// Multiply the factors
+				minHeap.add(Service.mulFactors(minHeap));
+
+				try /* Remove the current hidden node */ {
+					minHeap.add(Service.removeFactor(minHeap.remove(), current));
+				}
+
+				catch (RuntimeException rte) {
+					continue;
+				}
 			}
 
-			while (!factors.isEmpty()) /* Join the remaining factors */ {
+			while (!factors.isEmpty()) /* Multiply the remaining factors */ {
 				minHeap.add(factors.pop());
-				minHeap = Service.mulFactors(minHeap);
+				minHeap.add(Service.mulFactors(minHeap));
 			}
 
 			Cpt cpt = minHeap.remove();
@@ -75,8 +85,8 @@ public class _02_VE extends _01_Simple implements Sortable {
 			// The results of the queries in the remaining cpt
 			Queue<Double> results = new LinkedList<>();
 
-			Stack<Double> temp = new Stack<>();
 			String qn = Extract.QN(query);
+			Stack<Double> temp = new Stack<>();
 
 			Iterator<String> cptIterator = cpt.iterator();
 			while (cptIterator.hasNext()) {

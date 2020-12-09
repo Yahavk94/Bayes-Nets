@@ -1,7 +1,9 @@
 package Infrastructure;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -13,8 +15,8 @@ import Utils.Input;
  */
 
 public class Init {
-	protected static Map<String, Node> initFromFile(Map<String, Node> network) {
-		Map<String, Node> temp = new TreeMap<>();
+	protected static Map<String, Node> initFromFile() {
+		SortedMap<String, Node> temp = new TreeMap<>();
 
 		// Initialize the network nodes in lexicographic order
 		StringTokenizer st = new StringTokenizer(Input.nodes.remove(0).substring(11), ",");
@@ -23,11 +25,7 @@ public class Init {
 			temp.put(node.getName(), node);
 		}
 
-		Iterator<String> mapIterator = temp.keySet().iterator();
-		while (mapIterator.hasNext()) {
-			String name = mapIterator.next();
-			network.put(name, temp.get(name));
-		}
+		Map<String, Node> network = new LinkedHashMap<>(temp);
 
 		// Epsilon
 		Input.nodes.remove(0);
@@ -46,15 +44,7 @@ public class Init {
 			while (st.hasMoreTokens()) {
 				String token = st.nextToken();
 				if (!token.equals("none")) {
-					current.insertParent(token);
-
-					current.insertAncestor(token);
-					Iterator<String> ancestorsIterator = network.get(token).ancestorsIterator();
-					while (ancestorsIterator.hasNext()) {
-						current.insertAncestor(ancestorsIterator.next());
-					}
-
-					network.get(token).insertChild(current.getName());
+					current.insertParent(network.get(token));
 				}
 			}
 
@@ -72,15 +62,15 @@ public class Init {
 
 			st = new StringTokenizer(Input.nodes.remove(0), ",");
 			while (st.hasMoreTokens()) {
-				Set<String> set = new TreeSet<>();
+				SortedSet<String> parents = new TreeSet<>();
 
-				Iterator<String> iterator = current.parentsIterator();
-				while (iterator.hasNext()) {
-					set.add(iterator.next() + "=" + st.nextToken());
+				Iterator<String> currentParentsIterator = current.parentsIterator();
+				while (currentParentsIterator.hasNext()) {
+					parents.add(currentParentsIterator.next() + "=" + st.nextToken());
 				}
 
 				while (st.hasMoreTokens()) {
-					current.getCpt().put(current.getName() + st.nextToken() + "|" + set, Double.parseDouble(st.nextToken()));
+					current.getCpt().put(current.getName() + st.nextToken() + "|" + parents, Double.parseDouble(st.nextToken()));
 				}
 
 				st = new StringTokenizer(Input.nodes.remove(0), ",");

@@ -1,6 +1,5 @@
 package Infrastructure;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -16,7 +15,7 @@ public class BN {
 	 * This method constructs a new network.
 	 */
 	private BN() {
-		network = Init.initFromFile(new LinkedHashMap<>());
+		network = Init.initFromFile();
 	}
 
 	/**

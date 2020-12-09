@@ -8,7 +8,7 @@ import Infrastructure.Node;
  * @author Yahav Karpel
  */
 
-public class _03_Heuristic extends _02_VE implements Sortable {
+public class _03_Heuristic extends _02_VE {
 	@Override
 	public void sort(List<Node> HN) {
 		Collections.sort(HN);
