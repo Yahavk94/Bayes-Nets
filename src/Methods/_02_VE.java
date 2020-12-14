@@ -59,21 +59,23 @@ public class _02_VE implements Sortable {
 
 				factors = temp;
 
-				if (minHeap.isEmpty()) {
+				if (minHeap.isEmpty()) /* A meaningless hidden node */ {
 					continue;
 				}
 
 				// Multiply the factors
-				minHeap.add(Service.mulFactors(minHeap));
-
-				// Remove the current hidden node
-				Cpt cpt = Service.removeFactor(minHeap.remove(), current);
-
-				if (cpt.size() < 2) /* A meaningless cpt */ {
+				Cpt cpt = Service.mulFactors(minHeap);
+				if (cpt == null) {
 					continue;
 				}
 
-				if (cpt.size() == 2) {
+				// Remove the current hidden node
+				cpt = Service.removeNode(cpt, current);
+				if (cpt == null) {
+					continue;
+				}
+
+				if (!cpt.getRandomQuery().contains(",")) {
 					factors.add(cpt);
 				} else {
 					minHeap.add(cpt);
@@ -89,10 +91,12 @@ public class _02_VE implements Sortable {
 
 			// The results of the queries in the remaining cpt
 			Queue<Double> results = new LinkedList<>();
-
-			String qn = Extract.QN(query);
 			Stack<Double> temp = new Stack<>();
 
+			// The query node of the given query
+			String qn = Extract.QN(query);
+
+			// Fill in the results queue
 			Iterator<String> cptIterator = cpt.iterator();
 			while (cptIterator.hasNext()) {
 				String current = cptIterator.next();

@@ -3,8 +3,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import Utils.Cpt;
 
 /**
@@ -45,6 +43,13 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
+	 * This method returns the size of the domain.
+	 */
+	public int domainSize() {
+		return values.size();
+	}
+
+	/**
 	 * This method adds the specified value to this values set if it is not already present.
 	 */
 	protected void insertValue(String value) {
@@ -63,7 +68,6 @@ public class Node implements Comparable<Node> {
 	 */
 	protected void insertParent(Node node) {
 		parents.add(node.name);
-		ancestors.add(node.name);
 		node.children.add(name);
 		update(node);
 	}
@@ -72,7 +76,8 @@ public class Node implements Comparable<Node> {
 	 * This method updates the ancestors set of this node.
 	 */
 	private void update(Node node) {
-		ancestors = Stream.concat(ancestors.stream(), node.ancestors.stream()).collect(Collectors.toSet());
+		ancestors.add(node.name);
+		ancestors.addAll(node.ancestors);
 	}
 
 	/**
@@ -113,21 +118,21 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * This method calculates and returns the heuristic evaluation function.
+	 * This method calculates and returns the heuristic evaluation of this node.
 	 */
 	private int minFill() {
-		int heuristic = cpt.size();
+		int size = cpt.size();
 
 		Iterator<String> iterator = parents.iterator();
 		while (iterator.hasNext()) {
-			heuristic += BN.getInstance().getNode(iterator.next()).cpt.size();
+			size += BN.getInstance().getNode(iterator.next()).cpt.size();
 		}
 
 		iterator = children.iterator();
 		while (iterator.hasNext()) {
-			heuristic += BN.getInstance().getNode(iterator.next()).cpt.size();
+			size += BN.getInstance().getNode(iterator.next()).cpt.size();
 		}
 
-		return heuristic;
+		return size;
 	}
 }

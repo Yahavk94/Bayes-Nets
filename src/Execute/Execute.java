@@ -25,11 +25,15 @@ public class Execute {
 			Method method = Method.convert(current.substring(index + 1));
 
 			if (method == Method.SIMPLE) {
-				output.println(new _01_Simple().inference(query));
+				output.print(new _01_Simple().inference(query));
 			} else if (method == Method.VE) {
-				output.println(new _02_VE().inference(query));
+				output.print(new _02_VE().inference(query));
 			} else if (method == Method.HEURISTIC) {
-				output.println(new _03_Heuristic().inference(query));
+				output.print(new _03_Heuristic().inference(query));
+			}
+
+			if (!Input.queries.isEmpty()) {
+				output.println();
 			}
 		}
 

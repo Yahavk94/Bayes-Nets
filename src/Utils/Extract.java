@@ -1,16 +1,25 @@
 package Utils;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedSet;
+import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
+
+/**
+ * This class represents data extraction.
+ * @author Yahav Karpel
+ */
 
 public class Extract {
 	/**
 	 * This method extracts the query variable of the given query.
 	 */
 	public static String QX(String query) {
+		if (query.charAt(0) == '[') {
+			return query.substring(1, query.indexOf("="));
+		}
+
 		return query.substring(0, query.indexOf("="));
 	}
 
@@ -37,6 +46,20 @@ public class Extract {
 	}
 
 	/**
+	 * This method extracts the names of the nodes in the given query.
+	 */
+	public static Stack<String> getNames(String query) {
+		Stack<String> names = new Stack<>();
+
+		StringTokenizer st = new StringTokenizer(query, "[] ,");
+		while (st.hasMoreTokens()) {
+			names.push(QX(st.nextToken()));
+		}
+
+		return names;
+	}
+
+	/**
 	 * This method extracts the evidence nodes of the given query.
 	 */
 	public static Map<String, String> getEvidenceNodes(String query) {
@@ -55,34 +78,16 @@ public class Extract {
 	}
 
 	/**
-	 * This method extracts the nodes of the given query into a sorted set.
+	 * This method extracts and flattens the nodes of the given query into a sorted set.
 	 */
-	public static SortedSet<String> getSortedSet(String query) {
+	public static SortedSet<String> getNodes(String query) {
 		SortedSet<String> set = new TreeSet<>();
 
-		StringTokenizer st = new StringTokenizer(query, "|[] ,");
+		StringTokenizer st = new StringTokenizer(query, "[]| ,");
 		while (st.hasMoreTokens()) {
 			set.add(st.nextToken());
 		}
 
 		return set;
-	}
-
-	/**
-	 * This method calculates and returns the ascii sum of the nodes of the given query.
-	 */
-	public static int asciiSum(String query) {
-		int ascii = 0;
-
-		Iterator<String> iterator = getSortedSet(query).iterator();
-		while (iterator.hasNext()) {
-			String X = QX(iterator.next());
-			while (!X.isEmpty()) {
-				ascii += (int)X.charAt(0);
-				X = X.substring(1);
-			}
-		}
-
-		return ascii;
 	}
 }

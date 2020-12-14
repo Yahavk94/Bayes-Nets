@@ -73,11 +73,11 @@ public class Service {
 		// The representation separates the distinct parts by a plus sign
 		adds += cpf.size() - 1;
 
-		while (!cpf.isEmpty()) /* Create the distinct parts of the BN formula */ {
+		while (!cpf.isEmpty()) /* Generate the distinct parts of the BN formula */ {
 			Map<String, String> map = cpf.remove();
 			Queue<String> dp = new LinkedList<>();
 
-			// Create the current distinct part of the BN formula
+			// Generate the current distinct part of the BN formula
 			Iterator<String> mapIterator = map.keySet().iterator();
 			while (mapIterator.hasNext()) {
 				Node current = BN.getInstance().getNode(mapIterator.next());
@@ -148,7 +148,7 @@ public class Service {
 
 				while (!samples.isEmpty()) {
 					String sample = samples.pop();
-					SortedSet<String> set = Extract.getSortedSet(sample);
+					SortedSet<String> set = Extract.getNodes(sample);
 
 					boolean indicator = false;
 
@@ -191,7 +191,7 @@ public class Service {
 				}
 			}
 
-			if (cpt.size() > 1) {
+			if (Support.isLegalCpt(cpt)) {
 				factors.push(cpt);
 			}
 		}
@@ -212,18 +212,15 @@ public class Service {
 
 			Iterator<String> cptIterator = cpt.iterator();
 			while (cptIterator.hasNext()) {
-				SortedSet<String> outer = Extract.getSortedSet(cptIterator.next());
+				SortedSet<String> outer = Extract.getNodes(cptIterator.next());
 
 				Iterator<String> currentIterator = current.iterator();
 				while (currentIterator.hasNext()) {
-					SortedSet<String> inner = Extract.getSortedSet(currentIterator.next());
+					SortedSet<String> inner = Extract.getNodes(currentIterator.next());
 
-					if (!Collections.disjoint(outer, inner)) {
+					if (!Collections.disjoint(outer, inner)) /* Associate the resulting probability with the new query */ {
 						Set<String> union = Stream.concat(outer.stream(), inner.stream()).collect(Collectors.toSet());
-
-						// Associate the resulting probability with the new query
 						temp.put(new TreeSet<>(union).toString(), cpt.get(outer.toString()) * current.get(inner.toString()));
-
 						muls += 1;
 					}
 				}
@@ -232,13 +229,17 @@ public class Service {
 			cpt = temp;
 		}
 
+		if (!Support.isLegalCpt(cpt)) {
+			return null;
+		}
+
 		return cpt;
 	}
 
 	/**
-	 * This method removes the given factor from the cpt.
+	 * This method removes the given node from the cpt.
 	 */
-	public static Cpt removeFactor(Cpt top, Node node) {
+	public static Cpt removeNode(Cpt top, Node node) {
 		Cpt cpt = new Cpt();
 
 		// A random value from the values set
@@ -252,15 +253,15 @@ public class Service {
 				continue;
 			}
 
-			SortedSet<String> newQuery = Extract.getSortedSet(current);
+			SortedSet<String> query = Extract.getNodes(current);
 
 			// Initialize the resulting probability
-			double probability = top.get(newQuery.toString());
+			double probability = top.get(query.toString());
 
-			// Remove the given factor and the random value selected
-			newQuery.remove(node.getName() + "=" + random);
+			// Remove the given name and the random value selected
+			query.remove(node.getName() + "=" + random);
 
-			if (newQuery.isEmpty()) {
+			if (query.isEmpty()) {
 				continue;
 			}
 
@@ -270,17 +271,19 @@ public class Service {
 				String candidate = valuesIterator.next();
 
 				if (!candidate.equals(random)) {
-					SortedSet<String> temp = new TreeSet<>(newQuery);
-
+					SortedSet<String> temp = new TreeSet<>(query);
 					temp.add(node.getName() + "=" + candidate);
 					probability += top.get(temp.toString());
-
 					adds += 1;
 				}
 			}
 
 			// Associate the resulting probability with the new query
-			cpt.put(newQuery.toString(), probability);
+			cpt.put(query.toString(), probability);
+		}
+
+		if (!Support.isLegalCpt(cpt)) {
+			return null;
 		}
 
 		return cpt;

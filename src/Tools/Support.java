@@ -12,6 +12,7 @@ import java.util.Stack;
 import java.util.TreeSet;
 import Infrastructure.BN;
 import Infrastructure.Node;
+import Utils.Cpt;
 import Utils.Extract;
 
 /**
@@ -20,6 +21,25 @@ import Utils.Extract;
  */
 
 public class Support {
+	/**
+	 * This method returns the complementary queries of the given query.
+	 */
+	protected static Stack<String> getComplementaryQueries(String query) {
+		Stack<String> cq = new Stack<>();
+
+		String value = Extract.QV(query);
+
+		Iterator<String> iterator = BN.getInstance().getNode(Extract.QX(query)).valuesIterator();
+		while (iterator.hasNext()) {
+			String candidate = iterator.next();
+			if (!candidate.equals(value)) {
+				cq.push(query.replaceFirst(value, candidate));
+			}
+		}
+
+		return cq;
+	}
+
 	/**
 	 * This method breaks up the given query calculations into distinct parts.
 	 */
@@ -86,22 +106,18 @@ public class Support {
 	}
 
 	/**
-	 * This method returns the complementary queries of the given query.
+	 * This method returns true if the given cpt is legal.
 	 */
-	protected static Stack<String> getComplementaryQueries(String query) {
-		Stack<String> cq = new Stack<>();
-
-		String value = Extract.QV(query);
-
-		Iterator<String> iterator = BN.getInstance().getNode(Extract.QX(query)).valuesIterator();
-		while (iterator.hasNext()) {
-			String candidate = iterator.next();
-			if (!candidate.equals(value)) {
-				cq.push(query.replaceFirst(value, candidate));
-			}
+	protected static boolean isLegalCpt(Cpt cpt) {
+		if (cpt.isEmpty()) /* A meaningless cpt */ {
+			return false;
 		}
 
-		return cq;
+		if (!cpt.getRandomQuery().contains(",")) {
+			return cpt.size() == BN.getInstance().getNode(Extract.QX(cpt.getRandomQuery())).domainSize();
+		}
+
+		return true;
 	}
 
 	/**
@@ -135,7 +151,7 @@ public class Support {
 			}
 		}
 
-		// Generate all possible n tuples
+		// Generate all possible tuples
 		HN.remove(0);
 		while (!HN.isEmpty()) {
 			Queue<Queue<String>> temp = new LinkedList<>();

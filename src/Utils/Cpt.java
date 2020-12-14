@@ -2,6 +2,7 @@ package Utils;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Stack;
 
 /**
  * This class represents a conditional probability table.
@@ -23,6 +24,13 @@ public class Cpt implements Comparable<Cpt> {
 	 */
 	public double get(String query) {
 		return table.get(query);
+	}
+
+	/**
+	 * This method returns a random query from this cpt.
+	 */
+	public String getRandomQuery() {
+		return iterator().next();
 	}
 
 	/**
@@ -59,7 +67,7 @@ public class Cpt implements Comparable<Cpt> {
 	@Override
 	public int compareTo(Cpt cpt) {
 		if (table.size() == cpt.table.size()) {
-			if (Extract.asciiSum(iterator().next()) > Extract.asciiSum(cpt.iterator().next())) {
+			if (asciiSum() > cpt.asciiSum()) {
 				return 1;
 			}
 		}
@@ -69,5 +77,22 @@ public class Cpt implements Comparable<Cpt> {
 		}
 
 		return -1;
+	}
+
+	/**
+	 * This method calculates and returns the ascii sum of the nodes in this cpt.
+	 */
+	private int asciiSum() {
+		int ascii = 0;
+
+		Stack<String> names = Extract.getNames(iterator().next());
+		while (!names.isEmpty()) {
+			String name = names.pop();
+			for (int i = 0; i < name.length(); i += 1) {
+				ascii += (int)name.charAt(i);
+			}
+		}
+
+		return ascii;
 	}
 }
