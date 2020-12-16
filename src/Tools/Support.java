@@ -121,6 +121,28 @@ public class Support {
 	}
 
 	/**
+	 * This method returns true if the given factors can be multiplied.
+	 */
+	protected static boolean canBeMultiplied(SortedSet<String> outer, SortedSet<String> inner) {
+		Iterator<String> iterator = outer.iterator();
+		while (iterator.hasNext()) {
+			String query = iterator.next();
+			if (inner.contains(query)) {
+				continue;
+			}
+
+			Stack<String> cq = getComplementaryQueries(query);
+			while (!cq.isEmpty()) {
+				if (inner.contains(cq.pop())) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * This method returns the cartesian product of the values of the hidden nodes.
 	 */
 	private static Queue<Queue<String>> cartesianProduct(List<Node> HN) {

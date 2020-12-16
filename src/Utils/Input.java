@@ -22,7 +22,7 @@ public class Input {
 	 */
 	private static List<String> readLines() {
 		try {
-			return Files.readAllLines(Paths.get("Input.txt"));
+			return Files.readAllLines(Paths.get("inputs\\Input_3.txt"));
 		}
 
 		catch (IOException e) {

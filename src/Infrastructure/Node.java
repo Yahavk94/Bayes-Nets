@@ -106,11 +106,11 @@ public class Node implements Comparable<Node> {
 	 */
 	@Override
 	public int compareTo(Node node) {
-		if (minFill() == node.minFill()) {
+		if (computeHeuristic() == node.computeHeuristic()) {
 			return cpt.compareTo(node.cpt);
 		}
 
-		else if (minFill() > node.minFill()) {
+		else if (computeHeuristic() > node.computeHeuristic()) {
 			return 1;
 		}
 
@@ -118,9 +118,9 @@ public class Node implements Comparable<Node> {
 	}
 
 	/**
-	 * This method calculates and returns the heuristic evaluation of this node.
+	 * This method computes and returns the heuristic evaluation of this node.
 	 */
-	private int minFill() {
+	private int computeHeuristic() {
 		int size = cpt.size();
 
 		Iterator<String> iterator = parents.iterator();

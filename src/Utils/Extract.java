@@ -7,13 +7,13 @@ import java.util.StringTokenizer;
 import java.util.TreeSet;
 
 /**
- * This class represents data extraction.
+ * This class represents retrieval of data from the given query.
  * @author Yahav Karpel
  */
 
 public class Extract {
 	/**
-	 * This method extracts the query variable of the given query.
+	 * This method extracts the name of the query variable.
 	 */
 	public static String QX(String query) {
 		if (query.charAt(0) == '[') {
@@ -24,7 +24,7 @@ public class Extract {
 	}
 
 	/**
-	 * This method extracts the value of the query variable of the given query.
+	 * This method extracts the value of the query variable.
 	 */
 	public static String QV(String query) {
 		if (!query.contains("|")) {
@@ -35,7 +35,7 @@ public class Extract {
 	}
 
 	/**
-	 * This method extracts the query node of the given query.
+	 * This method extracts the query node.
 	 */
 	public static String QN(String query) {
 		if (!query.contains("|")) {
@@ -46,7 +46,7 @@ public class Extract {
 	}
 
 	/**
-	 * This method extracts the names of the nodes in the given query.
+	 * This method extracts the names of the nodes in the query.
 	 */
 	public static Stack<String> getNames(String query) {
 		Stack<String> names = new Stack<>();
@@ -60,7 +60,7 @@ public class Extract {
 	}
 
 	/**
-	 * This method extracts the evidence nodes of the given query.
+	 * This method extracts the evidence nodes.
 	 */
 	public static Map<String, String> getEvidenceNodes(String query) {
 		Map<String, String> evidence = new HashMap<>();
@@ -78,9 +78,9 @@ public class Extract {
 	}
 
 	/**
-	 * This method extracts and flattens the nodes of the given query into a sorted set.
+	 * This method flattens the nodes in the given query into a sorted set.
 	 */
-	public static SortedSet<String> getNodes(String query) {
+	public static SortedSet<String> getFlattenedNodes(String query) {
 		SortedSet<String> set = new TreeSet<>();
 
 		StringTokenizer st = new StringTokenizer(query, "[]| ,");

@@ -60,6 +60,10 @@ public class Cpt implements Comparable<Cpt> {
 	public int size() {
 		return table.size();
 	}
+	
+	public String toString() {
+		return table.toString();
+	}
 
 	/**
 	 * For sorting purpose.

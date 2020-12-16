@@ -1,5 +1,4 @@
 package Tools;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -148,7 +147,7 @@ public class Service {
 
 				while (!samples.isEmpty()) {
 					String sample = samples.pop();
-					SortedSet<String> set = Extract.getNodes(sample);
+					SortedSet<String> set = Extract.getFlattenedNodes(sample);
 
 					boolean indicator = false;
 
@@ -212,13 +211,13 @@ public class Service {
 
 			Iterator<String> cptIterator = cpt.iterator();
 			while (cptIterator.hasNext()) {
-				SortedSet<String> outer = Extract.getNodes(cptIterator.next());
+				SortedSet<String> outer = Extract.getFlattenedNodes(cptIterator.next());
 
 				Iterator<String> currentIterator = current.iterator();
 				while (currentIterator.hasNext()) {
-					SortedSet<String> inner = Extract.getNodes(currentIterator.next());
+					SortedSet<String> inner = Extract.getFlattenedNodes(currentIterator.next());
 
-					if (!Collections.disjoint(outer, inner)) /* Associate the resulting probability with the new query */ {
+					if (Support.canBeMultiplied(outer, inner)) /* Associate the resulting probability with the new query */ {
 						Set<String> union = Stream.concat(outer.stream(), inner.stream()).collect(Collectors.toSet());
 						temp.put(new TreeSet<>(union).toString(), cpt.get(outer.toString()) * current.get(inner.toString()));
 						muls += 1;
@@ -239,29 +238,29 @@ public class Service {
 	/**
 	 * This method removes the given node from the cpt.
 	 */
-	public static Cpt removeNode(Cpt top, Node node) {
+	public static Cpt removeNode(Cpt current, Node node) {
 		Cpt cpt = new Cpt();
 
 		// A random value from the values set
 		String random = node.getRandomValue();
 
-		Iterator<String> cptIterator = top.iterator();
+		Iterator<String> cptIterator = current.iterator();
 		while (cptIterator.hasNext()) {
-			String current = cptIterator.next();
+			String query = cptIterator.next();
 
-			if (!current.contains(node.getName() + "=" + random)) {
+			if (!query.contains(node.getName() + "=" + random)) {
 				continue;
 			}
 
-			SortedSet<String> query = Extract.getNodes(current);
+			SortedSet<String> set = Extract.getFlattenedNodes(query);
 
 			// Initialize the resulting probability
-			double probability = top.get(query.toString());
+			double probability = current.get(set.toString());
 
 			// Remove the given name and the random value selected
-			query.remove(node.getName() + "=" + random);
+			set.remove(node.getName() + "=" + random);
 
-			if (query.isEmpty()) {
+			if (set.isEmpty()) {
 				continue;
 			}
 
@@ -271,15 +270,15 @@ public class Service {
 				String candidate = valuesIterator.next();
 
 				if (!candidate.equals(random)) {
-					SortedSet<String> temp = new TreeSet<>(query);
+					SortedSet<String> temp = new TreeSet<>(set);
 					temp.add(node.getName() + "=" + candidate);
-					probability += top.get(temp.toString());
+					probability += current.get(temp.toString());
 					adds += 1;
 				}
 			}
 
 			// Associate the resulting probability with the new query
-			cpt.put(query.toString(), probability);
+			cpt.put(set.toString(), probability);
 		}
 
 		if (!Support.isLegalCpt(cpt)) {
